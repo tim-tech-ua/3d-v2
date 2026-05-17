@@ -171,8 +171,8 @@ input, select { font-family: inherit; }
 
 .viewer-area {
   position: relative;
-  background: #ececec;
-  border: 1px dashed #c8c8c8;
+  background: #fff;
+  border: 1px solid #ececec;
   border-radius: 12px;
   aspect-ratio: 4 / 3;
   overflow: hidden;
@@ -354,16 +354,16 @@ input, select { font-family: inherit; }
 /* ===== Миниатюры ===== */
 .thumbs {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   margin-top: 12px;
 }
 
 .thumb {
   height: 90px;
-  border: 1px dashed #c8c8c8;
+  border: 1px solid #e5e5e5;
   border-radius: 8px;
-  background-color: #ececec;
+  background-color: #fff;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -379,7 +379,7 @@ input, select { font-family: inherit; }
 }
 
 .thumb:hover { border-color: #888; }
-.thumb.active { border: 2px solid #1a1a1a; background: #fff; }
+.thumb.active { border: 2px solid #1a1a1a; padding: 3px; }
 
 .thumb .icon { font-size: 18px; opacity: 0.5; }
 .thumb .num { font-weight: 600; color: #555; font-size: 13px; }
@@ -395,7 +395,7 @@ input, select { font-family: inherit; }
 .thumb-360 .label { font-weight: 700; color: #1a1a1a; font-size: 12px; letter-spacing: 0.5px; }
 
 .thumb-360.active {
-  background: #1a1a1a;
+  background-color: #1a1a1a;
   border-color: #1a1a1a;
 }
 
@@ -697,6 +697,6 @@ input, select { font-family: inherit; }
   .price-current { font-size: 22px; }
   .cart-button { padding: 14px 20px; }
   .tabs { gap: 16px; }
-  .thumbs { grid-template-columns: repeat(3, 1fr); }
-  .thumb { height: 70px; }
+  .thumbs { grid-template-columns: repeat(5, 1fr); }
+  .thumb { height: 60px; }
 }

@@ -27,7 +27,7 @@ const STATE = {
   carouselIndex: 0
 };
 
-const SLIDE_COUNT = 5;
+const SLIDE_COUNT = 4;
 
 function formatPrice(n) {
   return new Intl.NumberFormat('uk-UA').format(n) + ' ₴';
