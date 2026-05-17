@@ -2,7 +2,7 @@
 // Связывание интерфейса с логикой: обработчики кнопок и toggle
 
 import { sceneApi } from './scene.js';
-import { loadModel, loadComponent, removeComponent, getInitialHalfHeight } from './model.js';
+import { loadModel, loadComponent, removeComponent } from './model.js';
 import {
   setActivePart, getActivePartKey, resetActivePart,
   setOnActivePartChanged,
@@ -16,26 +16,41 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
 const partsListEl = $('#partsList');
-const activePartLabel = $('#activePartLabel');
 const colorPicker = $('#colorPicker');
 const colorValueEl = $('#colorValue');
 const loadingEl = $('#loading');
 
+// Подписи для слотов в списке частей
+const SOURCE_LABELS = { base: 'Основа', legs: 'Ножки' };
+
 // ===== Построение списка частей модели =====
-// Сохраняет активную часть, если она ещё существует после изменения состава
+// Имена частей берутся из их источника (база → "Основа", слот legs → "Ножки").
+// Если в одном источнике несколько частей — добавляется номер.
+// Сохраняет активную часть, если она ещё существует после изменения состава.
 function buildPartsUI(parts) {
   partsListEl.innerHTML = '';
-  let index = 1;
-  for (const [key] of parts.entries()) {
-    const btn = document.createElement('button');
-    btn.className = 'btn full';
-    btn.textContent = 'Часть ' + index;
-    btn.title = key;
-    btn.dataset.key = key;
-    btn.addEventListener('click', () => setActivePart(key));
-    partsListEl.appendChild(btn);
-    index++;
+
+  // Сгруппировать по source с сохранением порядка вставки
+  const grouped = new Map();
+  for (const [key, part] of parts.entries()) {
+    const src = part.source || 'base';
+    if (!grouped.has(src)) grouped.set(src, []);
+    grouped.get(src).push([key, part]);
   }
+
+  for (const [source, items] of grouped) {
+    const label = SOURCE_LABELS[source] || source;
+    items.forEach(([key, part], idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn full';
+      btn.textContent = items.length > 1 ? `${label} ${idx + 1}` : label;
+      btn.title = key;
+      btn.dataset.key = key;
+      btn.addEventListener('click', () => setActivePart(key));
+      partsListEl.appendChild(btn);
+    });
+  }
+
   const currentActive = getActivePartKey();
   if (currentActive && parts.has(currentActive)) {
     setActivePart(currentActive);
@@ -52,7 +67,6 @@ setOnActivePartChanged((key, part) => {
     b.classList.toggle('active', b.dataset.key === key);
   });
   if (part) {
-    activePartLabel.textContent = part.name;
     const hex = '#' + part.color.getHexString().toUpperCase();
     colorPicker.value = hex;
     colorValueEl.textContent = hex;
@@ -60,7 +74,6 @@ setOnActivePartChanged((key, part) => {
       b.classList.toggle('active', b.dataset.texture === part.textureUrl);
     });
   } else {
-    activePartLabel.textContent = '—';
     $$('.fabric-btn').forEach((b) => b.classList.remove('active'));
   }
 });
@@ -71,13 +84,12 @@ function loadModelWithUI(path) {
   loadingEl.textContent = 'Загрузка модели...';
   resetActivePart();
   partsListEl.innerHTML = '';
-  activePartLabel.textContent = '—';
   $$('#legsList .btn').forEach((b) => b.classList.remove('active'));
 
   loadModel(path, sceneApi.modelHolder, {
     onLoaded: (parts, info) => {
       sceneApi.fitCameraToModel(info.sizeDiagonal);
-      sceneApi.setShadowFloorY(-getInitialHalfHeight());
+      sceneApi.fitShadowFloorToModel();
       buildPartsUI(parts);
       loadingEl.style.display = 'none';
     },
@@ -98,6 +110,7 @@ function loadComponentWithUI(path, slotName) {
   loadComponent(path, slotName, sceneApi.modelHolder, {
     onLoaded: (parts) => {
       buildPartsUI(parts);
+      sceneApi.fitShadowFloorToModel();
       loadingEl.style.display = 'none';
     },
     onError: (err) => {
@@ -130,7 +143,10 @@ export function initUI(defaultModelPath) {
       if (src) {
         loadComponentWithUI(src, slot);
       } else {
-        removeComponent(slot, sceneApi.modelHolder, (parts) => buildPartsUI(parts));
+        removeComponent(slot, sceneApi.modelHolder, (parts) => {
+          buildPartsUI(parts);
+          sceneApi.fitShadowFloorToModel();
+        });
       }
     });
   });

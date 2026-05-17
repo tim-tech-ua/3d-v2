@@ -66,10 +66,10 @@ export function initScene(canvas, viewerWrap) {
   ambLight = new THREE.AmbientLight(0xffffff, 0.4);
   scene.add(ambLight);
 
-  // Теневой пол
+  // Видимый пол: белый матовый, принимает тени
   shadowFloor = new THREE.Mesh(
     new THREE.PlaneGeometry(50, 50),
-    new THREE.ShadowMaterial({ opacity: 0.3 })
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0 })
   );
   shadowFloor.rotation.x = -Math.PI / 2;
   shadowFloor.receiveShadow = true;
@@ -113,13 +113,22 @@ function applyScene(name) {
   renderer.toneMappingExposure = s.exposure;
 }
 
-// ===== Тень на полу =====
+// ===== Тень/пол =====
+// Тоггл отключает отбрасывание теней от direct-света. Пол при этом остаётся виден.
 function setShadowVisible(visible) {
-  shadowFloor.visible = visible;
+  dirLight.castShadow = visible;
 }
 
 function setShadowFloorY(y) {
   shadowFloor.position.y = y;
+}
+
+// Подгоняет пол под низ всего содержимого modelHolder (база + компоненты)
+function fitShadowFloorToModel() {
+  if (!modelHolder) return;
+  const box = new THREE.Box3().setFromObject(modelHolder);
+  if (!isFinite(box.min.y)) return;
+  shadowFloor.position.y = box.min.y;
 }
 
 // Адаптация камеры под размер модели после её загрузки
@@ -160,6 +169,7 @@ export const sceneApi = {
   applyScene,
   setShadowVisible,
   setShadowFloorY,
+  fitShadowFloorToModel,
   fitCameraToModel,
   renderFrame,
   getCanvas
