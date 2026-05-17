@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Configurator</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="viewer-wrap">
+  <canvas id="viewer"></canvas>
+  <div id="info">ЛКМ — вращение · Колёсико — зум · ПКМ — перемещение камеры</div>
+  <div id="loading">Загрузка...</div>
+</div>
+
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <h1>3D Конфигуратор</h1>
+    <p>Материалы, окружение и позиционирование</p>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Модель</h2>
+    <div class="row col" id="modelsList">
+      <button class="btn full active" data-model="models/ImageToStl.com_Bjorn_Andre_obj.glb">Bjorn Andre</button>
+      <button class="btn full" data-model="models/asset.glb">Asset</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Часть модели</h2>
+    <div class="row col" id="partsList"></div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Материал</h2>
+    <div class="active-part-info">Изменяется: <b id="activePartLabel">—</b></div>
+    <div style="margin-bottom: 14px;">
+      <div class="field-label">Ткань</div>
+      <div class="fabric-grid" id="fabricList">
+        <button class="fabric-btn" data-texture="textures/MAGIC_VELVET_2243.png" style="background-image:url('textures/MAGIC_VELVET_2243.png')" title="Magic Velvet"></button>
+        <button class="fabric-btn" data-texture="textures/London_03.png" style="background-image:url('textures/London_03.png')" title="London 03"></button>
+        <button class="fabric-btn" data-texture="textures/Enjoy_New_1.png" style="background-image:url('textures/Enjoy_New_1.png')" title="Enjoy New"></button>
+        <button class="fabric-btn" data-texture="textures/COVER_83.png" style="background-image:url('textures/COVER_83.png')" title="Cover 83"></button>
+        <button class="fabric-btn" data-texture="textures/Boston_11.png" style="background-image:url('textures/Boston_11.png')" title="Boston 11"></button>
+        <button class="fabric-btn" data-texture="textures/BARREL_04.png" style="background-image:url('textures/BARREL_04.png')" title="Barrel 04"></button>
+      </div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span>Масштаб текстуры</span><span id="texScaleVal">2.0</span></div>
+      <input type="range" id="texScaleSlider" min="0.2" max="10" step="0.1" value="2">
+    </div>
+    <div>
+      <div class="field-label">Цвет</div>
+      <div class="color-row">
+        <input type="color" id="colorPicker" value="#ffffff" title="Оттенок">
+        <div class="color-info">Текущий: <span id="colorValue">#FFFFFF</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Сцена (быстрая)</h2>
+    <div class="row" id="sceneList">
+      <button class="btn active" data-scene="studio">Студия</button>
+      <button class="btn" data-scene="warm">Тёплая</button>
+      <button class="btn" data-scene="cool">Холодная</button>
+      <button class="btn" data-scene="dark">Витрина</button>
+      <button class="btn" data-scene="sunset">Закат</button>
+    </div>
+    <div style="margin-top: 14px;">
+      <div class="toggle-row">
+        <span>Тень на полу</span>
+        <div class="toggle on" id="shadowToggle"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Фотореалистичное окружение (HDRI)</h2>
+    <div class="row col" id="hdriList">
+      <button class="btn full" data-hdri="scena/brown_photostudio_02_4k.hdr" data-name="Photo Studio">Photo Studio (фотостудия)</button>
+      <button class="btn full" data-hdri="scena/docklands_01_4k.hdr" data-name="Docklands">Docklands (доки)</button>
+    </div>
+    <div style="margin-top: 12px;">
+      <div class="toggle-row">
+        <span>Показывать фон HDRI</span>
+        <div class="toggle" id="hdriBgToggle"></div>
+      </div>
+      <div class="slider-row" style="margin-top: 14px;">
+        <div class="slider-label"><span>Поворот окружения</span><span id="envRotVal">0°</span></div>
+        <input type="range" id="envRotSlider" min="0" max="360" step="1" value="0">
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Позиция и размер модели</h2>
+    <div class="slider-row">
+      <div class="slider-label"><span>Размер объекта</span><span id="scaleVal">1.00</span></div>
+      <input type="range" id="scaleSlider" min="0.1" max="3" step="0.05" value="1">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span>Позиция X</span><span id="posXVal">0.00</span></div>
+      <input type="range" id="posXSlider" min="-5" max="5" step="0.05" value="0">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span>Позиция Y (высота)</span><span id="posYVal">0.00</span></div>
+      <input type="range" id="posYSlider" min="-3" max="3" step="0.05" value="0">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span>Позиция Z</span><span id="posZVal">0.00</span></div>
+      <input type="range" id="posZSlider" min="-5" max="5" step="0.05" value="0">
+    </div>
+    <div class="slider-row">
+      <div class="slider-label"><span>Поворот модели</span><span id="rotYVal">0°</span></div>
+      <input type="range" id="rotYSlider" min="0" max="360" step="1" value="0">
+    </div>
+    <button id="resetTransformBtn" class="btn full" style="margin-top:6px">Сбросить позицию</button>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Камера</h2>
+    <div class="slider-row">
+      <div class="slider-label"><span>Угол обзора (FOV)</span><span id="fovVal">45°</span></div>
+      <input type="range" id="fovSlider" min="15" max="90" step="1" value="45">
+    </div>
+    <div class="help">Малый FOV = «телеобъектив», эффект приближения. Большой = широкий угол, видно больше окружения.</div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Действия</h2>
+    <div class="row col">
+      <button id="resetBtn" class="btn full">Сбросить материалы</button>
+      <button id="saveBtn" class="btn full">Сохранить изображение</button>
+    </div>
+  </div>
+</aside>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module" src="js/main.js"></script>
+
+</body>
+</html>
