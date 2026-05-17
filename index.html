@@ -73,34 +73,10 @@
         <button class="carousel-arrow prev" id="carouselPrev" aria-label="Попередньо">‹</button>
         <button class="carousel-arrow next" id="carouselNext" aria-label="Далі">›</button>
         <div class="carousel-slides" id="carouselSlides">
-          <div class="slide active">
-            <div class="photo-placeholder">
-              <span class="icon">🖼</span>
-              <span class="label">Фото 1</span>
-              <span class="browse">or <a href="#">browse files</a></span>
-            </div>
-          </div>
-          <div class="slide">
-            <div class="photo-placeholder">
-              <span class="icon">🖼</span>
-              <span class="label">Фото 2</span>
-              <span class="browse">or <a href="#">browse files</a></span>
-            </div>
-          </div>
-          <div class="slide">
-            <div class="photo-placeholder">
-              <span class="icon">🖼</span>
-              <span class="label">Фото 3</span>
-              <span class="browse">or <a href="#">browse files</a></span>
-            </div>
-          </div>
-          <div class="slide">
-            <div class="photo-placeholder">
-              <span class="icon">🖼</span>
-              <span class="label">Фото 4</span>
-              <span class="browse">or <a href="#">browse files</a></span>
-            </div>
-          </div>
+          <div class="slide active" style="background-image:url('image/01.png')"></div>
+          <div class="slide" style="background-image:url('image/02.png')"></div>
+          <div class="slide" style="background-image:url('image/03.png')"></div>
+          <div class="slide" style="background-image:url('image/04.png')"></div>
           <div class="slide">
             <div class="photo-placeholder">
               <span class="icon">🖼</span>
@@ -129,26 +105,10 @@
 
     <!-- Миниатюры: 5 фото + 360° -->
     <div class="thumbs" id="thumbsRow">
-      <button class="thumb photo-thumb active" data-index="0">
-        <span class="icon">🖼</span>
-        <span class="num">1</span>
-        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
-      </button>
-      <button class="thumb photo-thumb" data-index="1">
-        <span class="icon">🖼</span>
-        <span class="num">2</span>
-        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
-      </button>
-      <button class="thumb photo-thumb" data-index="2">
-        <span class="icon">🖼</span>
-        <span class="num">3</span>
-        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
-      </button>
-      <button class="thumb photo-thumb" data-index="3">
-        <span class="icon">🖼</span>
-        <span class="num">4</span>
-        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
-      </button>
+      <button class="thumb photo-thumb active" data-index="0" style="background-image:url('image/01.png')"></button>
+      <button class="thumb photo-thumb" data-index="1" style="background-image:url('image/02.png')"></button>
+      <button class="thumb photo-thumb" data-index="2" style="background-image:url('image/03.png')"></button>
+      <button class="thumb photo-thumb" data-index="3" style="background-image:url('image/04.png')"></button>
       <button class="thumb photo-thumb" data-index="4">
         <span class="icon">🖼</span>
         <span class="num">5</span>
@@ -269,22 +229,22 @@
       <div class="picker-body">
         <div class="collection-grid" id="collectionGrid">
           <article class="collection-card model-card active" data-model="models/ImageToStl.com_Bjorn_Andre_obj.glb" data-name="Bjorn Andre">
-            <div class="collection-thumb">🪑</div>
+            <div class="collection-thumb" style="background-image:url('image/01.png')"></div>
             <h4>Bjorn Andre</h4>
             <div class="collection-price">50 000 ₴</div>
           </article>
           <article class="collection-card model-card" data-model="models/asset.glb" data-name="Asset">
-            <div class="collection-thumb">🪑</div>
+            <div class="collection-thumb" style="background-image:url('image/02.png')"></div>
             <h4>Asset</h4>
             <div class="collection-price">55 000 ₴</div>
           </article>
           <article class="collection-card">
-            <div class="collection-thumb">🪑</div>
+            <div class="collection-thumb" style="background-image:url('image/03.png')"></div>
             <h4>Стілець Стиль-1 White</h4>
             <div class="collection-price">1 450 ₴</div>
           </article>
           <article class="collection-card highlight">
-            <div class="collection-thumb">🪑</div>
+            <div class="collection-thumb" style="background-image:url('image/04.png')"></div>
             <h4>Стілець Стиль-1 White</h4>
             <div class="collection-prices">
               <span class="now">2 000 ₴</span>
