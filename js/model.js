@@ -1,5 +1,5 @@
 // js/model.js
-// Загрузка моделей, автогенерация UV, разбиение на части
+// Загрузка моделей: база + подкомпоненты по слотам (например, разные ножки)
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -7,18 +7,18 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const gltfLoader = new GLTFLoader();
 
 // ===== Состояние =====
-let currentModel = null;
+let currentModel = null;                  // базовая модель
+const currentComponents = new Map();      // slotName -> Object3D
 let modelInitialHalfHeight = 0;
-let parts = new Map(); // key (имя материала) -> { name, meshes[], texture, color, textureUrl }
-let originalMaterials = new Map(); // mesh -> material.clone()
+const parts = new Map();                  // partKey -> { name, meshes[], texture, color, textureUrl, source }
+const originalMaterials = new Map();      // mesh -> material.clone()
 
 // ===== Генерация UV, если их нет =====
-// Простая планарная проекция: XZ → uv. Не идеально, но позволяет видеть текстуру.
-// Для правильного результата лучше делать UV-развёртку в Blender (Smart UV Project).
+// Простая планарная проекция XZ → uv. Не идеально, но позволяет видеть текстуру.
 function ensureUVs(mesh) {
   const geo = mesh.geometry;
   if (!geo) return;
-  if (geo.attributes.uv) return; // UV уже есть
+  if (geo.attributes.uv) return;
 
   console.warn('Mesh "' + mesh.name + '" не имеет UV — генерирую планарную проекцию (XZ)');
 
@@ -30,8 +30,6 @@ function ensureUVs(mesh) {
   const pos = geo.attributes.position;
   const uv = new Float32Array(pos.count * 2);
 
-  // Выбираем плоскость проекции по наибольшим размерам
-  // Возьмём планарную XZ как универсальную для большинства мебели
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const z = pos.getZ(i);
@@ -42,78 +40,140 @@ function ensureUVs(mesh) {
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
 }
 
-// ===== Очистка предыдущей модели =====
-function disposeModel(holder) {
-  if (!currentModel) return;
-  holder.remove(currentModel);
-  currentModel.traverse((c) => {
+// ===== Регистрация mesh в общей мапе частей =====
+// source = null для базы, slotName для подкомпонента (нужно при удалении слота)
+function registerMeshInParts(mesh, source) {
+  ensureUVs(mesh);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+
+  originalMaterials.set(mesh, mesh.material.clone());
+
+  const matName = mesh.material?.name || mesh.name || 'default';
+  const partKey = source ? source + ':' + matName : matName;
+
+  if (!parts.has(partKey)) {
+    parts.set(partKey, {
+      name: source ? source + ': ' + matName : matName,
+      meshes: [],
+      texture: null,
+      color: new THREE.Color(0xffffff),
+      textureUrl: null,
+      source: source
+    });
+  }
+  parts.get(partKey).meshes.push(mesh);
+}
+
+// ===== Утилита: освободить ресурсы под-дерева =====
+function disposeObject(obj) {
+  obj.traverse((c) => {
     if (c.isMesh) {
       c.geometry?.dispose();
       if (Array.isArray(c.material)) c.material.forEach(m => m.dispose());
       else c.material?.dispose();
+      originalMaterials.delete(c);
     }
   });
+}
+
+// ===== Удаление подкомпонента из слота =====
+function disposeComponent(slotName, holder) {
+  const comp = currentComponents.get(slotName);
+  if (!comp) return;
+  holder.remove(comp);
+  disposeObject(comp);
+  for (const [key, part] of parts) {
+    if (part.source === slotName) parts.delete(key);
+  }
+  currentComponents.delete(slotName);
+}
+
+// ===== Удаление базы (вместе со всеми компонентами) =====
+function disposeBase(holder) {
+  for (const slot of [...currentComponents.keys()]) {
+    disposeComponent(slot, holder);
+  }
+  if (!currentModel) return;
+  holder.remove(currentModel);
+  disposeObject(currentModel);
   currentModel = null;
   parts.clear();
   originalMaterials.clear();
+  holder.position.set(0, 0, 0);
 }
 
-// ===== Загрузка модели =====
-// onLoaded: (parts: Map, info: { size, halfHeight }) => void
-// onProgress: (percent: number) => void
-// onError: (err) => void
+// ===== Загрузка базовой модели =====
 export function loadModel(path, holder, callbacks = {}) {
   const { onLoaded, onProgress, onError } = callbacks;
 
-  disposeModel(holder);
+  disposeBase(holder);
 
   gltfLoader.load(path, (gltf) => {
     const model = gltf.scene;
     currentModel = model;
 
-    console.log('=== Части модели (' + path + ') ===');
+    console.log('=== Базовая модель (' + path + ') ===');
     model.traverse((c) => {
       if (c.isMesh) {
         console.log('Mesh:', c.name, '| Material:', c.material?.name, '| UV:', !!c.geometry.attributes.uv);
-        ensureUVs(c);
-        c.castShadow = true;
-        c.receiveShadow = true;
-
-        const matName = c.material?.name || c.name || 'default';
-        originalMaterials.set(c, c.material.clone());
-
-        if (!parts.has(matName)) {
-          parts.set(matName, {
-            name: matName,
-            meshes: [],
-            texture: null,
-            color: new THREE.Color(0xffffff),
-            textureUrl: null
-          });
-        }
-        parts.get(matName).meshes.push(c);
+        registerMeshInParts(c, null);
       }
     });
 
-    // Центрирование модели в её собственной системе координат
+    // Сдвигаем holder, а не саму модель, чтобы добавляемые позже компоненты
+    // сохраняли своё естественное положение относительно базы.
     const box = new THREE.Box3().setFromObject(model);
     const sizeDiagonal = box.getSize(new THREE.Vector3()).length();
     const center = box.getCenter(new THREE.Vector3());
-    model.position.sub(center);
+    holder.position.set(-center.x, -center.y, -center.z);
     modelInitialHalfHeight = (box.max.y - box.min.y) / 2;
 
     holder.add(model);
 
-    if (onLoaded) onLoaded(parts, {
-      sizeDiagonal,
-      halfHeight: modelInitialHalfHeight
-    });
+    if (onLoaded) onLoaded(parts, { sizeDiagonal, halfHeight: modelInitialHalfHeight });
   }, (xhr) => {
     if (xhr.total && onProgress) onProgress((xhr.loaded / xhr.total) * 100);
   }, (err) => {
     console.error('Ошибка загрузки модели:', err);
     if (onError) onError(err);
   });
+}
+
+// ===== Загрузка подкомпонента в слот =====
+// Файл компонента должен быть авторен в Blender в той же системе координат,
+// что и база (если базу не двигали — компонент тоже на своём месте).
+// При повторном вызове с тем же slot предыдущий компонент удаляется.
+export function loadComponent(path, slotName, holder, callbacks = {}) {
+  const { onLoaded, onError } = callbacks;
+
+  disposeComponent(slotName, holder);
+
+  gltfLoader.load(path, (gltf) => {
+    const model = gltf.scene;
+
+    console.log('=== Компонент "' + slotName + '" (' + path + ') ===');
+    model.traverse((c) => {
+      if (c.isMesh) {
+        console.log('Mesh:', c.name, '| Material:', c.material?.name);
+        registerMeshInParts(c, slotName);
+      }
+    });
+
+    currentComponents.set(slotName, model);
+    holder.add(model);
+
+    if (onLoaded) onLoaded(parts);
+  }, undefined, (err) => {
+    console.error('Ошибка загрузки компонента:', err);
+    if (onError) onError(err);
+  });
+}
+
+// ===== Снять подкомпонент со слота =====
+export function removeComponent(slotName, holder, callback) {
+  disposeComponent(slotName, holder);
+  if (callback) callback(parts);
 }
 
 // ===== Доступ к состоянию =====

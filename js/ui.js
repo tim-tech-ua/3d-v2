@@ -2,7 +2,7 @@
 // Связывание интерфейса с логикой: обработчики кнопок и toggle
 
 import { sceneApi } from './scene.js';
-import { loadModel, getInitialHalfHeight } from './model.js';
+import { loadModel, loadComponent, removeComponent, getInitialHalfHeight } from './model.js';
 import {
   setActivePart, getActivePartKey, resetActivePart,
   setOnActivePartChanged,
@@ -22,6 +22,7 @@ const colorValueEl = $('#colorValue');
 const loadingEl = $('#loading');
 
 // ===== Построение списка частей модели =====
+// Сохраняет активную часть, если она ещё существует после изменения состава
 function buildPartsUI(parts) {
   partsListEl.innerHTML = '';
   let index = 1;
@@ -35,9 +36,13 @@ function buildPartsUI(parts) {
     partsListEl.appendChild(btn);
     index++;
   }
-  if (parts.size > 0) {
-    const firstKey = parts.keys().next().value;
-    setActivePart(firstKey);
+  const currentActive = getActivePartKey();
+  if (currentActive && parts.has(currentActive)) {
+    setActivePart(currentActive);
+  } else if (parts.size > 0) {
+    setActivePart(parts.keys().next().value);
+  } else {
+    resetActivePart();
   }
 }
 
@@ -56,21 +61,22 @@ setOnActivePartChanged((key, part) => {
     });
   } else {
     activePartLabel.textContent = '—';
+    $$('.fabric-btn').forEach((b) => b.classList.remove('active'));
   }
 });
 
-// ===== Загрузка модели =====
+// ===== Загрузка базовой модели =====
 function loadModelWithUI(path) {
   loadingEl.style.display = 'block';
   loadingEl.textContent = 'Загрузка модели...';
   resetActivePart();
   partsListEl.innerHTML = '';
   activePartLabel.textContent = '—';
+  $$('#legsList .btn').forEach((b) => b.classList.remove('active'));
 
   loadModel(path, sceneApi.modelHolder, {
     onLoaded: (parts, info) => {
       sceneApi.fitCameraToModel(info.sizeDiagonal);
-      // Модель центрирована в model.js, низ находится на -halfHeight
       sceneApi.setShadowFloorY(-getInitialHalfHeight());
       buildPartsUI(parts);
       loadingEl.style.display = 'none';
@@ -85,6 +91,22 @@ function loadModelWithUI(path) {
   });
 }
 
+// ===== Загрузка подкомпонента (ножки и т.п.) =====
+function loadComponentWithUI(path, slotName) {
+  loadingEl.style.display = 'block';
+  loadingEl.textContent = 'Загрузка...';
+  loadComponent(path, slotName, sceneApi.modelHolder, {
+    onLoaded: (parts) => {
+      buildPartsUI(parts);
+      loadingEl.style.display = 'none';
+    },
+    onError: (err) => {
+      loadingEl.style.display = 'none';
+      alert('Не удалось загрузить компонент: ' + path);
+    }
+  });
+}
+
 // ===== Регистрация всех обработчиков =====
 export function initUI(defaultModelPath) {
   // ----- Кнопки выбора модели -----
@@ -93,6 +115,23 @@ export function initUI(defaultModelPath) {
       $$('#modelsList .btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       loadModelWithUI(btn.dataset.model);
+    });
+  });
+
+  // ----- Кнопки слотов: ножки и т.п. -----
+  // data-slot — имя слота (legs, arms, back...), data-src — путь к GLB
+  // Пустой data-src = снять компонент со слота
+  $$('#legsList .btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      $$('#legsList .btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const slot = btn.dataset.slot || 'legs';
+      const src = btn.dataset.src;
+      if (src) {
+        loadComponentWithUI(src, slot);
+      } else {
+        removeComponent(slot, sceneApi.modelHolder, (parts) => buildPartsUI(parts));
+      }
     });
   });
 

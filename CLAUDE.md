@@ -1,6 +1,6 @@
 # 3D Configurator
 
-Веб-конфигуратор мебели в духе Rolf Benz: 3D-модель, выбор ткани/цвета по частям, переключение быстрых сцен, сохранение скриншота.
+Веб-конфигуратор мебели в духе Rolf Benz: 3D-модель из базы + сменных подкомпонентов (например, ножек), выбор ткани/цвета по частям, переключение быстрых сцен, сохранение скриншота.
 
 ---
 
@@ -49,18 +49,24 @@
 
 **`scene.js`** — экспортирует синглтон `sceneApi` со ссылками на `scene`, `camera`, `renderer`, `controls`, `modelHolder` и методами: `applyScene`, `setShadowVisible`, `setShadowFloorY`, `fitCameraToModel`, `renderFrame`, `getCanvas`. Пресеты быстрых сцен (`studio`, `warm`, `cool`, `dark`, `sunset`) — наборы цветов фона/света/экспозиции. Окружение для отражений — `RoomEnvironment` через `PMREMGenerator`. Тень: `ShadowMaterial` + `DirectionalLight` с `castShadow`.
 
-**`model.js`** — `loadModel(path, holder, callbacks)` грузит GLB через `GLTFLoader`, обходит дерево, для каждого `isMesh` вызывает `ensureUVs(c)` (нет UV → планарная XZ-проекция). Группирует mesh-и по имени материала в `Map<materialName, { name, meshes[], texture, color, textureUrl }>`. Центрирует модель и сохраняет `modelInitialHalfHeight`. Экспорт: `getParts()`, `getOriginalMaterials()`, `getInitialHalfHeight()`.
+**`model.js`** — поддерживает базовую модель + подкомпоненты по слотам (например, `legs`).
+- `loadModel(path, holder, callbacks)` грузит базу. Чтобы компоненты, добавленные позже, автоматически совпадали по координатам, центрирование делается сдвигом `holder.position`, а не самой модели. Перед загрузкой удаляет старую базу и все её компоненты.
+- `loadComponent(path, slotName, holder, callbacks)` грузит подкомпонент в указанный слот. Если в слоте уже был компонент — удаляется. Файл компонента должен быть авторен в Blender в той же системе координат, что и база.
+- `removeComponent(slotName, holder, callback)` снимает подкомпонент со слота.
+- Все mesh-и (база и компоненты) попадают в общую мапу `parts: Map<partKey, { name, meshes[], texture, color, textureUrl, source }>`. У базовых частей `source = null`, у компонентных — `source = slotName`. Это нужно при удалении слота, чтобы вычистить только его части. `partKey` базы — имя материала; компонента — `slotName + ':' + материал`, чтобы не сливались с базовыми при совпадении имён.
+- Экспорт: `loadModel`, `loadComponent`, `removeComponent`, `getParts()`, `getOriginalMaterials()`, `getInitialHalfHeight()`.
 
 **`materials.js`** — хранит `activePartKey` и `textureRepeat`. Функции: `setActivePart(key)`, `getActivePartKey()`, `applyFabric(url, cb)` (грузит текстуру, ставит `RepeatWrapping`, при необходимости заменяет материал на `MeshStandardMaterial`), `applyColor(hex)`, `setTextureRepeat(value)`, `resetAllMaterials()`. Через `setOnActivePartChanged(cb)` уведомляет UI.
 
-**`ui.js`** — все обработчики. Кнопки моделей → `loadModelWithUI(path)`: показать loader → `loadModel(...)` → по `onLoaded` собрать кнопки частей через `buildPartsUI(parts)` → `sceneApi.fitCameraToModel(...)` → `sceneApi.setShadowFloorY(-getInitialHalfHeight())`.
+**`ui.js`** — все обработчики. Кнопки моделей → `loadModelWithUI(path)`: показать loader → `loadModel(...)` → по `onLoaded` собрать кнопки частей через `buildPartsUI(parts)` → `sceneApi.fitCameraToModel(...)` → `sceneApi.setShadowFloorY(-getInitialHalfHeight())`. Кнопки слотов `#legsList` → `loadComponentWithUI(src, slot)` или `removeComponent(slot, ...)` (если `data-src` пуст). После загрузки/снятия компонента `buildPartsUI(parts)` вызывается заново; активная часть сохраняется, если она ещё существует в новой мапе.
 
 ---
 
 ## Что уже работает
 
 - 2 модели (`Bjorn Andre`, `Asset`), переключение кнопками
-- Авторазбиение на «части» по уникальным материалам
+- Сменные подкомпоненты по слотам (сейчас слот `legs` — ножки), отдельный GLB на вариант
+- Авторазбиение на «части» по уникальным материалам (включая части подкомпонентов)
 - Активная часть → ткань (6 тканей) и/или цвет (HEX color picker)
 - Слайдер `texture repeat` 0.2–10
 - 5 быстрых сцен
@@ -110,11 +116,16 @@ AddType application/javascript .js
 
 ## Паттерн добавления ассетов
 
-Оба типа ассетов добавляются одинаково — файл в папку + кнопка в `index.html`. JS их сам подхватывает по `data-*`.
+Все типы ассетов добавляются одинаково — файл в папку + кнопка в `index.html`. JS их сам подхватывает по `data-*`.
 
 ```html
-<!-- модель -->
+<!-- базовая модель -->
 <button class="btn full" data-model="models/имя.glb">Название</button>
+
+<!-- подкомпонент в слот (ножки и т.п.) -->
+<button class="btn full" data-slot="legs" data-src="models/legs_имя.glb">Название</button>
+<!-- пустой data-src = снять компонент со слота -->
+<button class="btn full" data-slot="legs" data-src="">Без ножек</button>
 
 <!-- ткань -->
 <button class="fabric-btn"
@@ -124,3 +135,7 @@ AddType application/javascript .js
 ```
 
 Текстуры: бесшовные PNG/JPG, квадратные, ≥1024px.
+
+**Слоты подкомпонентов.** Сейчас в HTML один контейнер `#legsList` для слота `legs`. Чтобы добавить новый слот (например, `arms` — подлокотники), достаточно скопировать секцию в HTML с другим id и `data-slot`. Обработчик в `ui.js` сейчас цепляется именно к `#legsList` — если слотов больше, обобщить селектор (например, `[data-slot]`).
+
+**Координаты подкомпонентов.** В Blender располагайте варианты ножек ровно там, где они должны стоять относительно базы (как будто всё одна сцена). При загрузке `loadModel` сдвигает не саму базу, а `holder.position`, поэтому добавленные позже компоненты автоматически выравниваются с базой.
