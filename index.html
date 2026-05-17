@@ -1,92 +1,207 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>3D Configurator</title>
+  <title>Сваут — Bjorn</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
-<div id="viewer-wrap">
-  <canvas id="viewer"></canvas>
-  <div id="info">ЛКМ — вращение · Колёсико — зум · ПКМ — перемещение камеры</div>
-  <div id="loading">Загрузка...</div>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="logo" href="#">BJORN</a>
+    <nav class="main-nav">
+      <button class="nav-trigger">☰ Каталог товарів</button>
+      <a href="#">Доставка та оплата</a>
+      <a href="#">Контакти</a>
+      <a href="#">Про нас</a>
+      <a href="#">Для бізнесу</a>
+    </nav>
+    <div class="header-search">
+      <input type="search" placeholder="Знайдіть свої товари тут">
+      <button class="search-go" aria-label="Пошук">🔍</button>
+    </div>
+    <div class="header-icons">
+      <span class="flag" title="Українська">🇺🇦</span>
+      <button class="icon-btn" aria-label="Профіль">👤</button>
+      <button class="icon-btn" aria-label="Обране">♡</button>
+      <button class="icon-btn" aria-label="Кошик">🛒</button>
+    </div>
+  </div>
+</header>
+
+<div class="container breadcrumbs">
+  <a href="#">Інтернет-магазин Bjorn</a>
+  <span class="sep">/</span>
+  <a href="#">Столи та стільці</a>
+  <span class="sep">/</span>
+  <a href="#">Дивани</a>
+  <span class="sep">/</span>
+  <span class="current">Диван прямий Сваут</span>
 </div>
 
-<aside id="sidebar">
-  <div id="sidebar-header">
-    <h1>3D Конфигуратор</h1>
-    <p>Материалы и сцена</p>
+<div class="container product-tabs">
+  <nav class="tabs">
+    <button class="tab active">Все про товар</button>
+    <button class="tab">Характеристики</button>
+    <button class="tab">Відгуки</button>
+  </nav>
+  <div class="tabs-actions">
+    <a class="reviews-link" href="#">💬 3 відгука</a>
+    <button class="icon-btn" aria-label="Поділитися">⤴</button>
+    <button class="icon-btn" aria-label="В обране">♡</button>
   </div>
+</div>
 
-  <div class="section">
-    <h2 class="section-title">Модель</h2>
-    <div class="row col" id="modelsList">
-      <button class="btn full active" data-model="models/ImageToStl.com_Bjorn_Andre_obj.glb">Bjorn Andre</button>
-      <button class="btn full" data-model="models/asset.glb">Asset</button>
+<main class="container product-page">
+  <div class="product-viewer">
+    <div id="viewer-wrap">
+      <canvas id="viewer"></canvas>
+      <div id="loading">Завантаження…</div>
+    </div>
+    <div class="thumbs" id="modelsList">
+      <button class="thumb active" data-model="models/ImageToStl.com_Bjorn_Andre_obj.glb" title="Bjorn Andre">Bjorn Andre</button>
+      <button class="thumb" data-model="models/asset.glb" title="Asset">Asset</button>
     </div>
   </div>
 
-  <div class="section">
-    <h2 class="section-title">Ножки</h2>
-    <div class="row col" id="legsList">
-      <button class="btn full" data-slot="legs" data-src="models/opora/Bjorn_LC_obj.glb">Опора LC</button>
-      <button class="btn full" data-slot="legs" data-src="models/opora/Bjorn_LR_obj.glb">Опора LR</button>
-      <button class="btn full" data-slot="legs" data-src="">Без ножек</button>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">Часть модели</h2>
-    <div class="row col" id="partsList"></div>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">Материал</h2>
-    <div style="margin-bottom: 14px;">
-      <div class="field-label">Ткань</div>
-      <div class="fabric-grid" id="fabricList">
-        <button class="fabric-btn" data-texture="textures/MAGIC_VELVET_2243.png" style="background-image:url('textures/MAGIC_VELVET_2243.png')" title="Magic Velvet"></button>
-        <button class="fabric-btn" data-texture="textures/London_03.png" style="background-image:url('textures/London_03.png')" title="London 03"></button>
-        <button class="fabric-btn" data-texture="textures/Enjoy_New_1.png" style="background-image:url('textures/Enjoy_New_1.png')" title="Enjoy New"></button>
-        <button class="fabric-btn" data-texture="textures/COVER_83.png" style="background-image:url('textures/COVER_83.png')" title="Cover 83"></button>
-        <button class="fabric-btn" data-texture="textures/Boston_11.png" style="background-image:url('textures/Boston_11.png')" title="Boston 11"></button>
-        <button class="fabric-btn" data-texture="textures/BARREL_04.png" style="background-image:url('textures/BARREL_04.png')" title="Barrel 04"></button>
+  <aside class="product-info">
+    <div class="product-meta">
+      <div class="article">#SV0124356</div>
+      <div class="status-row">
+        Статус: <span class="status-pill in-stock">в наявності</span>
       </div>
     </div>
-    <div class="slider-row">
-      <div class="slider-label"><span>Масштаб текстуры</span><span id="texScaleVal">2.0</span></div>
-      <input type="range" id="texScaleSlider" min="0.2" max="10" step="0.1" value="2">
-    </div>
-    <div>
-      <div class="field-label">Цвет</div>
-      <div class="color-row">
-        <input type="color" id="colorPicker" value="#ffffff" title="Оттенок">
-        <div class="color-info">Текущий: <span id="colorValue">#FFFFFF</span></div>
+
+    <h1 class="product-title">Сваут</h1>
+    <p class="product-subtitle">
+      Стілець <span id="variantSummary">Bjorn Andre</span>
+    </p>
+
+    <div class="price-cart-row">
+      <div class="prices">
+        <span class="price-current" id="priceCurrent">50 000 ₴</span>
+        <span class="price-old" id="priceOld">68 493 ₴</span>
+        <span class="price-discount">-27%</span>
       </div>
+      <button class="cart-button" id="cartBtn">До кошика</button>
     </div>
-  </div>
 
-  <div class="section">
-    <h2 class="section-title">Сцена (быстрая)</h2>
-    <div class="row" id="sceneList">
-      <button class="btn active" data-scene="studio">Студия</button>
-      <button class="btn" data-scene="warm">Тёплая</button>
-      <button class="btn" data-scene="cool">Холодная</button>
-      <button class="btn" data-scene="dark">Витрина</button>
-      <button class="btn" data-scene="sunset">Закат</button>
-    </div>
-  </div>
+    <details class="picker" open>
+      <summary>
+        <span class="picker-title">Підібрати кольори тканини</span>
+        <span class="picker-count">(6)</span>
+        <span class="picker-arrow"></span>
+      </summary>
+      <div class="picker-body">
+        <div class="fabric-grid" id="fabricList">
+          <button class="fabric-btn" data-texture="textures/MAGIC_VELVET_2243.png" data-name="Magic Velvet" data-price="0" style="background-image:url('textures/MAGIC_VELVET_2243.png')" title="Magic Velvet"></button>
+          <button class="fabric-btn" data-texture="textures/London_03.png" data-name="London 03" data-price="500" style="background-image:url('textures/London_03.png')" title="London 03"></button>
+          <button class="fabric-btn" data-texture="textures/Enjoy_New_1.png" data-name="Enjoy New" data-price="800" style="background-image:url('textures/Enjoy_New_1.png')" title="Enjoy New"></button>
+          <button class="fabric-btn" data-texture="textures/COVER_83.png" data-name="Cover 83" data-price="1200" style="background-image:url('textures/COVER_83.png')" title="Cover 83"></button>
+          <button class="fabric-btn" data-texture="textures/Boston_11.png" data-name="Boston 11" data-price="1500" style="background-image:url('textures/Boston_11.png')" title="Boston 11"></button>
+          <button class="fabric-btn" data-texture="textures/BARREL_04.png" data-name="Barrel 04" data-price="2000" style="background-image:url('textures/BARREL_04.png')" title="Barrel 04"></button>
+        </div>
+        <div class="color-control">
+          <label for="baseColorPicker">Відтінок тканини:</label>
+          <input type="color" id="baseColorPicker" value="#ffffff">
+        </div>
+      </div>
+    </details>
 
-  <div class="section">
-    <h2 class="section-title">Действия</h2>
-    <div class="row col">
-      <button id="resetBtn" class="btn full">Сбросить материалы</button>
-      <button id="saveBtn" class="btn full">Сохранить изображение</button>
-    </div>
-  </div>
-</aside>
+    <details class="picker">
+      <summary>
+        <span class="picker-title">Підібрати ніжки</span>
+        <span class="picker-count">(3)</span>
+        <span class="picker-arrow"></span>
+      </summary>
+      <div class="picker-body">
+        <div class="legs-list" id="legsList">
+          <button class="leg-btn" data-slot="legs" data-src="models/opora/Bjorn_LC_obj.glb" data-name="Опора LC" data-price="5000">
+            <span class="leg-thumb">LC</span>
+            <span class="leg-info">
+              <span class="leg-name">Опора LC</span>
+              <span class="leg-price">+5 000 ₴</span>
+            </span>
+          </button>
+          <button class="leg-btn" data-slot="legs" data-src="models/opora/Bjorn_LR_obj.glb" data-name="Опора LR" data-price="7000">
+            <span class="leg-thumb">LR</span>
+            <span class="leg-info">
+              <span class="leg-name">Опора LR</span>
+              <span class="leg-price">+7 000 ₴</span>
+            </span>
+          </button>
+          <button class="leg-btn" data-slot="legs" data-src="" data-name="Без опори" data-price="0">
+            <span class="leg-thumb">—</span>
+            <span class="leg-info">
+              <span class="leg-name">Без опори</span>
+              <span class="leg-price">+0 ₴</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </details>
+
+    <details class="picker">
+      <summary>
+        <span class="picker-title">Підібрати колір ніжок</span>
+        <span class="picker-count">(6)</span>
+        <span class="picker-arrow"></span>
+      </summary>
+      <div class="picker-body">
+        <div class="color-swatches" id="legsColorSwatches">
+          <button class="swatch" data-color="#ffffff" title="Білий" style="background:#ffffff"></button>
+          <button class="swatch" data-color="#1a1a1a" title="Чорний" style="background:#1a1a1a"></button>
+          <button class="swatch" data-color="#8b6f47" title="Дуб" style="background:#8b6f47"></button>
+          <button class="swatch" data-color="#3a2410" title="Венге" style="background:#3a2410"></button>
+          <button class="swatch" data-color="#c0c0c0" title="Хром" style="background:#c0c0c0"></button>
+          <button class="swatch" data-color="#b8860b" title="Латунь" style="background:#b8860b"></button>
+        </div>
+        <div class="color-control">
+          <label for="legsColorPicker">Свій колір:</label>
+          <input type="color" id="legsColorPicker" value="#ffffff">
+        </div>
+      </div>
+    </details>
+
+    <details class="picker" open>
+      <summary>
+        <span class="picker-title">Колекція</span>
+        <span class="picker-count">(4)</span>
+        <span class="picker-arrow"></span>
+      </summary>
+      <div class="picker-body">
+        <div class="collection-grid">
+          <article class="collection-card">
+            <div class="collection-thumb">🪑</div>
+            <h4>Стілець Стиль-1 White</h4>
+            <div class="collection-price">1 450 ₴</div>
+          </article>
+          <article class="collection-card highlight">
+            <div class="collection-thumb">🪑</div>
+            <h4>Стілець Стиль-1 White</h4>
+            <div class="collection-prices">
+              <span class="now">2 000 ₴</span>
+              <span class="was">1 450 ₴</span>
+              <span class="discount">-27%</span>
+            </div>
+          </article>
+          <article class="collection-card">
+            <div class="collection-thumb">🪑</div>
+            <h4>Стілець Стиль-1 White</h4>
+            <div class="collection-price">1 450 ₴</div>
+          </article>
+          <article class="collection-card">
+            <div class="collection-thumb">🪑</div>
+            <h4>Стілець Стиль-1 White</h4>
+            <div class="collection-price">1 450 ₴</div>
+          </article>
+        </div>
+      </div>
+    </details>
+  </aside>
+</main>
 
 <script type="importmap">
 {
@@ -96,7 +211,6 @@
   }
 }
 </script>
-
 <script type="module" src="js/main.js"></script>
 
 </body>

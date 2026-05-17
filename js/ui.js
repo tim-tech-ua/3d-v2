@@ -1,208 +1,160 @@
 // js/ui.js
-// Связывание интерфейса с логикой: обработчики кнопок и toggle
+// Связывание интерфейса с логикой product page:
+// выбор ткани / ножек / цвета ножек, пересчёт цены, переключение модели.
 
 import { sceneApi } from './scene.js';
 import { loadModel, loadComponent, removeComponent } from './model.js';
-import {
-  setActivePart, getActivePartKey, resetActivePart,
-  setOnActivePartChanged,
-  applyFabric, applyColor,
-  setTextureRepeat,
-  resetAllMaterials
-} from './materials.js';
+import { applyFabricToSource, applyColorToSource } from './materials.js';
 
-// ===== DOM-элементы =====
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
-const partsListEl = $('#partsList');
-const colorPicker = $('#colorPicker');
-const colorValueEl = $('#colorValue');
 const loadingEl = $('#loading');
 
-// Подписи для слотов в списке частей
-const SOURCE_LABELS = { base: 'Основа', legs: 'Ножки' };
+// ===== Прайсинг (демо) =====
+const BASE_PRICE = 50000;          // ₴, базовая цена изделия
+const DISCOUNT_RATE = 0.27;        // 27 % скидка от «старой» цены
 
-// ===== Построение списка частей модели =====
-// Имена частей берутся из их источника (база → "Основа", слот legs → "Ножки").
-// Если в одном источнике несколько частей — добавляется номер.
-// Сохраняет активную часть, если она ещё существует после изменения состава.
-function buildPartsUI(parts) {
-  partsListEl.innerHTML = '';
+const STATE = {
+  fabricUrl: null,
+  fabricPrice: 0,
+  fabricName: '',
+  legsSrc: null,
+  legsPrice: 0,
+  legsName: ''
+};
 
-  // Сгруппировать по source с сохранением порядка вставки
-  const grouped = new Map();
-  for (const [key, part] of parts.entries()) {
-    const src = part.source || 'base';
-    if (!grouped.has(src)) grouped.set(src, []);
-    grouped.get(src).push([key, part]);
-  }
-
-  for (const [source, items] of grouped) {
-    const label = SOURCE_LABELS[source] || source;
-    items.forEach(([key, part], idx) => {
-      const btn = document.createElement('button');
-      btn.className = 'btn full';
-      btn.textContent = items.length > 1 ? `${label} ${idx + 1}` : label;
-      btn.title = key;
-      btn.dataset.key = key;
-      btn.addEventListener('click', () => setActivePart(key));
-      partsListEl.appendChild(btn);
-    });
-  }
-
-  const currentActive = getActivePartKey();
-  if (currentActive && parts.has(currentActive)) {
-    setActivePart(currentActive);
-  } else if (parts.size > 0) {
-    setActivePart(parts.keys().next().value);
-  } else {
-    resetActivePart();
-  }
+function formatPrice(n) {
+  return new Intl.NumberFormat('uk-UA').format(n) + ' ₴';
 }
 
-// ===== Реакция UI на смену активной части =====
-setOnActivePartChanged((key, part) => {
-  partsListEl.querySelectorAll('.btn').forEach((b) => {
-    b.classList.toggle('active', b.dataset.key === key);
-  });
-  if (part) {
-    const hex = '#' + part.color.getHexString().toUpperCase();
-    colorPicker.value = hex;
-    colorValueEl.textContent = hex;
-    $$('.fabric-btn').forEach((b) => {
-      b.classList.toggle('active', b.dataset.texture === part.textureUrl);
-    });
-  } else {
-    $$('.fabric-btn').forEach((b) => b.classList.remove('active'));
-  }
-});
+function recalculatePrice() {
+  const total = BASE_PRICE + STATE.fabricPrice + STATE.legsPrice;
+  const oldPrice = Math.round(total / (1 - DISCOUNT_RATE));
+  $('#priceCurrent').textContent = formatPrice(total);
+  $('#priceOld').textContent = formatPrice(oldPrice);
+}
 
-// ===== Загрузка базовой модели =====
+function updateSummary() {
+  const parts = [];
+  if (STATE.fabricName) parts.push(STATE.fabricName);
+  if (STATE.legsName)   parts.push(STATE.legsName);
+  $('#variantSummary').textContent = parts.length ? parts.join(' · ') : 'Bjorn Andre';
+}
+
+// ===== Загрузка модели =====
 function loadModelWithUI(path) {
   loadingEl.style.display = 'block';
-  loadingEl.textContent = 'Загрузка модели...';
-  resetActivePart();
-  partsListEl.innerHTML = '';
-  $$('#legsList .btn').forEach((b) => b.classList.remove('active'));
-
+  loadingEl.textContent = 'Завантаження моделі...';
   loadModel(path, sceneApi.modelHolder, {
     onLoaded: (parts, info) => {
       sceneApi.fitCameraToModel(info.sizeDiagonal);
-      buildPartsUI(parts);
       loadingEl.style.display = 'none';
+      // Восстановить состояние конфигуратора на новой модели
+      if (STATE.legsSrc)  loadComponentWithUI(STATE.legsSrc, 'legs', /*silent*/ true);
+      if (STATE.fabricUrl) applyFabricToSource(null, STATE.fabricUrl);
     },
     onProgress: (percent) => {
-      loadingEl.textContent = 'Загрузка: ' + percent.toFixed(0) + '%';
+      loadingEl.textContent = 'Завантаження: ' + percent.toFixed(0) + '%';
     },
-    onError: (err) => {
+    onError: () => {
       loadingEl.style.display = 'none';
-      alert('Не удалось загрузить модель: ' + path);
+      alert('Не вдалося завантажити модель: ' + path);
     }
   });
 }
 
-// ===== Загрузка подкомпонента (ножки и т.п.) =====
-function loadComponentWithUI(path, slotName) {
-  loadingEl.style.display = 'block';
-  loadingEl.textContent = 'Загрузка...';
+function loadComponentWithUI(path, slotName, silent) {
+  if (!silent) {
+    loadingEl.style.display = 'block';
+    loadingEl.textContent = 'Завантаження...';
+  }
   loadComponent(path, slotName, sceneApi.modelHolder, {
-    onLoaded: (parts) => {
-      buildPartsUI(parts);
+    onLoaded: () => { loadingEl.style.display = 'none'; },
+    onError: () => {
       loadingEl.style.display = 'none';
-    },
-    onError: (err) => {
-      loadingEl.style.display = 'none';
-      alert('Не удалось загрузить компонент: ' + path);
+      alert('Не вдалося завантажити: ' + path);
     }
   });
 }
 
-// ===== Регистрация всех обработчиков =====
+// ===== Регистрация обработчиков =====
 export function initUI(defaultModelPath) {
-  // ----- Кнопки выбора модели -----
-  $$('#modelsList .btn').forEach((btn) => {
+  // ---- Переключение модели (миниатюры под канвасом)
+  $$('#modelsList .thumb').forEach((btn) => {
     btn.addEventListener('click', () => {
-      $$('#modelsList .btn').forEach((b) => b.classList.remove('active'));
+      $$('#modelsList .thumb').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       loadModelWithUI(btn.dataset.model);
     });
   });
 
-  // ----- Кнопки слотов: ножки и т.п. -----
-  // data-slot — имя слота (legs, arms, back...), data-src — путь к GLB
-  // Пустой data-src = снять компонент со слота
-  $$('#legsList .btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      $$('#legsList .btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      const slot = btn.dataset.slot || 'legs';
-      const src = btn.dataset.src;
-      if (src) {
-        loadComponentWithUI(src, slot);
-      } else {
-        removeComponent(slot, sceneApi.modelHolder, (parts) => buildPartsUI(parts));
-      }
-    });
-  });
-
-  // ----- Кнопки тканей -----
+  // ---- Кнопки тканей (применяются к базе)
   $$('.fabric-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      if (!getActivePartKey()) {
-        alert('Сначала выберите часть модели');
-        return;
-      }
       $$('.fabric-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      applyFabric(btn.dataset.texture);
+      STATE.fabricUrl   = btn.dataset.texture;
+      STATE.fabricPrice = parseInt(btn.dataset.price, 10) || 0;
+      STATE.fabricName  = btn.dataset.name || '';
+      applyFabricToSource(null, STATE.fabricUrl);
+      recalculatePrice();
+      updateSummary();
     });
   });
 
-  // ----- Color picker -----
-  colorPicker.addEventListener('input', (e) => {
-    const hex = e.target.value.toUpperCase();
-    colorValueEl.textContent = hex;
-    applyColor(e.target.value);
+  // ---- Колор-пикер для базы (тинт тканины)
+  $('#baseColorPicker').addEventListener('input', (e) => {
+    applyColorToSource(null, e.target.value);
   });
 
-  // ----- Масштаб текстуры -----
-  $('#texScaleSlider').addEventListener('input', (e) => {
-    const v = parseFloat(e.target.value);
-    $('#texScaleVal').textContent = v.toFixed(1);
-    setTextureRepeat(v);
-  });
-
-  // ----- Быстрые сцены -----
-  $$('#sceneList .btn').forEach((btn) => {
+  // ---- Кнопки ножек
+  $$('.leg-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      $$('#sceneList .btn').forEach((b) => b.classList.remove('active'));
+      $$('.leg-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      sceneApi.applyScene(btn.dataset.scene);
+      const src = btn.dataset.src;
+      STATE.legsSrc   = src || null;
+      STATE.legsPrice = parseInt(btn.dataset.price, 10) || 0;
+      STATE.legsName  = btn.dataset.name || '';
+      if (src) {
+        loadComponentWithUI(src, 'legs');
+      } else {
+        removeComponent('legs', sceneApi.modelHolder);
+      }
+      recalculatePrice();
+      updateSummary();
     });
   });
 
-  // ----- Сброс материалов -----
-  $('#resetBtn').addEventListener('click', () => {
-    resetAllMaterials();
-    colorPicker.value = '#ffffff';
-    colorValueEl.textContent = '#FFFFFF';
-    $$('.fabric-btn').forEach((b) => b.classList.remove('active'));
+  // ---- Готовые swatches для цвета ножек
+  $$('#legsColorSwatches .swatch').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      $$('#legsColorSwatches .swatch').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const color = btn.dataset.color;
+      $('#legsColorPicker').value = color;
+      applyColorToSource('legs', color);
+    });
   });
 
-  // ----- Сохранение изображения -----
-  $('#saveBtn').addEventListener('click', () => {
-    sceneApi.renderFrame();
-    const dataURL = sceneApi.getCanvas().toDataURL('image/png');
-    const link = document.createElement('a');
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    link.download = 'configurator-' + timestamp + '.png';
-    link.href = dataURL;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // ---- Произвольный цвет для ножек
+  $('#legsColorPicker').addEventListener('input', (e) => {
+    $$('#legsColorSwatches .swatch').forEach((b) => b.classList.remove('active'));
+    applyColorToSource('legs', e.target.value);
   });
 
-  // ----- Стартовая загрузка модели -----
+  // ---- «До кошика»
+  $('#cartBtn').addEventListener('click', () => {
+    const summary = 'Сваут\n' +
+      'Тканина: ' + (STATE.fabricName || 'не вибрано') + '\n' +
+      'Ніжки: '   + (STATE.legsName   || 'не вибрано') + '\n' +
+      'Ціна: '    + $('#priceCurrent').textContent;
+    alert('Додано до кошика:\n\n' + summary);
+  });
+
+  // ---- Стартовая загрузка
   loadModelWithUI(defaultModelPath);
+  recalculatePrice();
+  updateSummary();
 }
