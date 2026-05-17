@@ -18,7 +18,6 @@ button {
 }
 
 a { color: inherit; text-decoration: none; }
-
 input, select { font-family: inherit; }
 
 .container {
@@ -61,8 +60,7 @@ input, select { font-family: inherit; }
   flex-wrap: wrap;
 }
 
-.main-nav a,
-.main-nav button {
+.main-nav a, .main-nav button {
   font-size: 13px;
   padding: 8px 12px;
   border-radius: 6px;
@@ -98,16 +96,9 @@ input, select { font-family: inherit; }
   font-size: 13px;
 }
 
-.search-go {
-  padding: 6px 8px;
-  font-size: 14px;
-}
+.search-go { padding: 6px 8px; font-size: 14px; }
 
-.header-icons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.header-icons { display: flex; align-items: center; gap: 8px; }
 
 .icon-btn {
   width: 36px;
@@ -121,7 +112,6 @@ input, select { font-family: inherit; }
 }
 
 .icon-btn:hover { background: #f0f0f0; }
-
 .flag { font-size: 18px; padding: 0 4px; }
 
 /* ===== Хлебные крошки ===== */
@@ -147,10 +137,7 @@ input, select { font-family: inherit; }
   border-bottom: 1px solid #eee;
 }
 
-.tabs {
-  display: flex;
-  gap: 24px;
-}
+.tabs { display: flex; gap: 24px; }
 
 .tab {
   padding: 14px 0;
@@ -166,18 +153,9 @@ input, select { font-family: inherit; }
   font-weight: 600;
 }
 
-.tabs-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+.tabs-actions { display: flex; align-items: center; gap: 8px; }
 
-.reviews-link {
-  font-size: 13px;
-  color: #888;
-  padding: 8px 12px;
-}
-
+.reviews-link { font-size: 13px; color: #888; padding: 8px 12px; }
 .reviews-link:hover { color: #1a1a1a; }
 
 /* ===== Сетка product page ===== */
@@ -188,24 +166,172 @@ input, select { font-family: inherit; }
   padding: 32px 24px 64px;
 }
 
-/* ===== 3D вьюер ===== */
-.product-viewer {
-  position: relative;
-}
+/* ===== Вьюер (карусель + 3D) ===== */
+.product-viewer { position: relative; }
 
-#viewer-wrap {
+.viewer-area {
   position: relative;
-  background: #f5f5f5;
+  background: #ececec;
+  border: 1px dashed #c8c8c8;
   border-radius: 12px;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
 }
 
-#viewer {
+/* Верхний оверлей с бейджами и иконками */
+.viewer-top {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.badges { display: flex; gap: 8px; pointer-events: auto; }
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge.in-stock { background: #d4f5d4; color: #1b6e1b; }
+.badge.new      { background: #ffe8c1; color: #c4720a; }
+
+.viewer-actions { display: flex; gap: 8px; pointer-events: auto; }
+
+.icon-btn-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s;
+}
+
+.icon-btn-circle:hover { transform: scale(1.06); }
+
+/* Карусель фото (слой) */
+.photo-carousel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.25s;
+}
+
+.viewer-area.mode-3d .photo-carousel {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
+  color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 2;
+  transition: transform 0.15s;
+}
+
+.carousel-arrow:hover { transform: translateY(-50%) scale(1.06); }
+.carousel-arrow.prev { left: 20px; }
+.carousel-arrow.next { right: 20px; }
+
+.carousel-slides {
+  position: relative;
   width: 100%;
   height: 100%;
-  display: block;
 }
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.slide.active { opacity: 1; pointer-events: auto; }
+
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #999;
+  font-size: 13px;
+}
+
+.photo-placeholder .icon { font-size: 36px; opacity: 0.45; margin-bottom: 4px; }
+.photo-placeholder .label { font-weight: 600; color: #777; }
+.photo-placeholder .browse { font-size: 12px; color: #999; }
+.photo-placeholder .browse a { color: #777; text-decoration: underline; }
+
+.carousel-dots {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #bbb;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.dot:hover { transform: scale(1.2); }
+.dot.active { background: #1a1a1a; }
+
+/* 3D вьюер (слой) */
+.viewer-3d {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.viewer-area.mode-3d .viewer-3d {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#viewer-wrap { width: 100%; height: 100%; position: relative; }
+
+#viewer { width: 100%; height: 100%; display: block; }
 
 #loading {
   position: absolute;
@@ -219,31 +345,56 @@ input, select { font-family: inherit; }
   color: #333;
   display: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 4;
 }
 
+/* ===== Миниатюры ===== */
 .thumbs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .thumb {
-  flex: 1;
-  height: 64px;
-  border: 2px solid #eee;
+  height: 90px;
+  border: 1px dashed #c8c8c8;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: #ececec;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  font-size: 12px;
-  color: #555;
+  gap: 2px;
+  font-size: 11px;
+  color: #888;
   transition: all 0.15s;
+  padding: 4px;
 }
 
-.thumb:hover { border-color: #ccc; }
-.thumb.active { border-color: #1a1a1a; background: #fff; color: #1a1a1a; }
+.thumb:hover { border-color: #888; }
+.thumb.active { border: 2px solid #1a1a1a; background: #fff; }
+
+.thumb .icon { font-size: 18px; opacity: 0.5; }
+.thumb .num { font-weight: 600; color: #555; font-size: 13px; }
+.thumb .browse { font-size: 10px; color: #999; }
+.thumb .browse a { text-decoration: underline; color: #999; }
+
+.thumb-360 {
+  border: 1px solid #c8c8c8;
+  background: #fff;
+}
+
+.thumb-360 .plus { font-size: 26px; font-weight: 300; color: #1a1a1a; line-height: 1; }
+.thumb-360 .label { font-weight: 700; color: #1a1a1a; font-size: 12px; letter-spacing: 0.5px; }
+
+.thumb-360.active {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+}
+
+.thumb-360.active .plus,
+.thumb-360.active .label { color: #fff; }
 
 /* ===== Правая колонка ===== */
 .product-info {
@@ -277,21 +428,10 @@ input, select { font-family: inherit; }
   margin-left: 6px;
 }
 
-.status-pill.in-stock {
-  background: #d4f5d4;
-  color: #1b6e1b;
-}
+.status-pill.in-stock { background: #d4f5d4; color: #1b6e1b; }
 
-.product-title {
-  font-size: 32px;
-  font-weight: 700;
-  margin: 4px 0 0;
-}
-
-.product-subtitle {
-  font-size: 14px;
-  color: #666;
-}
+.product-title { font-size: 32px; font-weight: 700; margin: 4px 0 0; }
+.product-subtitle { font-size: 14px; color: #666; }
 
 /* ===== Цена + кнопка ===== */
 .price-cart-row {
@@ -301,24 +441,10 @@ input, select { font-family: inherit; }
   margin-top: 12px;
 }
 
-.prices {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-}
+.prices { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 
-.price-current {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-}
-
-.price-old {
-  font-size: 15px;
-  color: #999;
-  text-decoration: line-through;
-}
+.price-current { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.price-old { font-size: 15px; color: #999; text-decoration: line-through; }
 
 .price-discount {
   background: #ff9c8a;
@@ -364,17 +490,8 @@ input, select { font-family: inherit; }
 .picker summary::-webkit-details-marker { display: none; }
 .picker summary::marker { display: none; content: ""; }
 
-.picker-title {
-  font-size: 14px;
-  font-weight: 600;
-  flex: 1;
-}
-
-.picker-count {
-  color: #888;
-  font-size: 13px;
-  margin-right: 12px;
-}
+.picker-title { font-size: 14px; font-weight: 600; flex: 1; }
+.picker-count { color: #888; font-size: 13px; margin-right: 12px; }
 
 .picker-arrow {
   width: 8px;
@@ -385,15 +502,11 @@ input, select { font-family: inherit; }
   transition: transform 0.2s;
 }
 
-.picker[open] .picker-arrow {
-  transform: rotate(-135deg);
-}
+.picker[open] .picker-arrow { transform: rotate(-135deg); }
 
-.picker-body {
-  padding: 4px 20px 20px;
-}
+.picker-body { padding: 4px 20px 20px; }
 
-/* ===== Сетка тканей ===== */
+/* ===== Ткани ===== */
 .fabric-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
@@ -413,12 +526,8 @@ input, select { font-family: inherit; }
 .fabric-btn:hover { border-color: #ddd; transform: scale(1.03); }
 .fabric-btn.active { border-color: #1a1a1a; }
 
-/* ===== Список ножек ===== */
-.legs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* ===== Ножки ===== */
+.legs-list { display: flex; flex-direction: column; gap: 8px; }
 
 .leg-btn {
   display: flex;
@@ -432,10 +541,7 @@ input, select { font-family: inherit; }
   transition: all 0.15s;
 }
 
-.leg-btn:hover {
-  border-color: #1a1a1a;
-  background: #fafafa;
-}
+.leg-btn:hover { border-color: #1a1a1a; background: #fafafa; }
 
 .leg-btn.active {
   border-color: #1a1a1a;
@@ -457,21 +563,13 @@ input, select { font-family: inherit; }
   font-size: 13px;
 }
 
-.leg-btn.active .leg-thumb {
-  background: #fff;
-}
+.leg-btn.active .leg-thumb { background: #fff; }
 
-.leg-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 14px;
-}
-
+.leg-info { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
 .leg-name { font-weight: 600; }
 .leg-price { font-size: 12px; opacity: 0.7; }
 
-/* ===== Цветовые swatches ===== */
+/* ===== Swatches цвета ===== */
 .color-swatches {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
@@ -487,6 +585,7 @@ input, select { font-family: inherit; }
 }
 
 .swatch:hover { transform: scale(1.08); }
+
 .swatch.active {
   border-color: #1a1a1a;
   border-width: 3px;
@@ -515,7 +614,7 @@ input, select { font-family: inherit; }
 .color-control input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 .color-control input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
 
-/* ===== Коллекция (похожие товары) ===== */
+/* ===== Коллекция ===== */
 .collection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -529,17 +628,14 @@ input, select { font-family: inherit; }
   background: #fff;
   text-align: left;
   transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: default;
 }
 
-.collection-card:hover {
-  border-color: #ccc;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-}
+.collection-card.model-card { cursor: pointer; }
+.collection-card.model-card:hover { border-color: #888; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); }
+.collection-card.model-card.active { border-color: #1a1a1a; border-width: 2px; padding: 13px; }
 
-.collection-card.highlight {
-  border-color: #f5b89e;
-  background: #fef5f0;
-}
+.collection-card.highlight { border-color: #f5b89e; background: #fef5f0; }
 
 .collection-thumb {
   width: 100%;
@@ -560,20 +656,12 @@ input, select { font-family: inherit; }
   line-height: 1.3;
 }
 
-.collection-price {
-  font-size: 14px;
-  font-weight: 700;
-}
+.collection-price { font-size: 14px; font-weight: 700; }
 
-.collection-prices {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
+.collection-prices { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
 .collection-prices .now { font-size: 14px; font-weight: 700; }
 .collection-prices .was { font-size: 11px; color: #999; text-decoration: line-through; }
+
 .collection-prices .discount {
   background: #ff9c8a;
   color: #fff;
@@ -600,4 +688,6 @@ input, select { font-family: inherit; }
   .price-current { font-size: 22px; }
   .cart-button { padding: 14px 20px; }
   .tabs { gap: 16px; }
+  .thumbs { grid-template-columns: repeat(3, 1fr); }
+  .thumb { height: 70px; }
 }

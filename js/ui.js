@@ -1,6 +1,5 @@
 // js/ui.js
-// Связывание интерфейса с логикой product page:
-// выбор ткани / ножек / цвета ножек, пересчёт цены, переключение модели.
+// Связывание UI product page: карусель фото / 3D-режим, конфигуратор и прайсинг.
 
 import { sceneApi } from './scene.js';
 import { loadModel, loadComponent, removeComponent } from './model.js';
@@ -10,10 +9,11 @@ const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
 const loadingEl = $('#loading');
+const viewerArea = $('.viewer-area');
 
 // ===== Прайсинг (демо) =====
-const BASE_PRICE = 50000;          // ₴, базовая цена изделия
-const DISCOUNT_RATE = 0.27;        // 27 % скидка от «старой» цены
+const BASE_PRICE = 50000;
+const DISCOUNT_RATE = 0.27;
 
 const STATE = {
   fabricUrl: null,
@@ -21,8 +21,13 @@ const STATE = {
   fabricName: '',
   legsSrc: null,
   legsPrice: 0,
-  legsName: ''
+  legsName: '',
+  modelName: 'Bjorn Andre',
+  is360: false,
+  carouselIndex: 0
 };
+
+const SLIDE_COUNT = 5;
 
 function formatPrice(n) {
   return new Intl.NumberFormat('uk-UA').format(n) + ' ₴';
@@ -36,10 +41,47 @@ function recalculatePrice() {
 }
 
 function updateSummary() {
-  const parts = [];
+  const parts = [STATE.modelName];
   if (STATE.fabricName) parts.push(STATE.fabricName);
   if (STATE.legsName)   parts.push(STATE.legsName);
-  $('#variantSummary').textContent = parts.length ? parts.join(' · ') : 'Bjorn Andre';
+  $('#variantSummary').textContent = parts.join(' · ');
+}
+
+// ===== Переключение режимов вьюера =====
+function set360Mode(enabled) {
+  STATE.is360 = enabled;
+  viewerArea.classList.toggle('mode-3d', enabled);
+  $('#toggle360').classList.toggle('active', enabled);
+  if (enabled) {
+    // снять подсветку с фото-миниатюр
+    $$('.photo-thumb').forEach((b) => b.classList.remove('active'));
+  } else {
+    // вернуться к текущему фото
+    $$('.photo-thumb').forEach((b, i) => {
+      b.classList.toggle('active', i === STATE.carouselIndex);
+    });
+  }
+}
+
+// Гарантируем, что 3D-режим активен (вызывается при любом изменении конфигурации)
+function ensure360() {
+  if (!STATE.is360) set360Mode(true);
+}
+
+// ===== Карусель =====
+function showSlide(idx) {
+  STATE.carouselIndex = ((idx % SLIDE_COUNT) + SLIDE_COUNT) % SLIDE_COUNT;
+  $$('#carouselSlides .slide').forEach((s, i) => {
+    s.classList.toggle('active', i === STATE.carouselIndex);
+  });
+  $$('#carouselDots .dot').forEach((d, i) => {
+    d.classList.toggle('active', i === STATE.carouselIndex);
+  });
+  if (!STATE.is360) {
+    $$('.photo-thumb').forEach((b, i) => {
+      b.classList.toggle('active', i === STATE.carouselIndex);
+    });
+  }
 }
 
 // ===== Загрузка модели =====
@@ -51,7 +93,7 @@ function loadModelWithUI(path) {
       sceneApi.fitCameraToModel(info.sizeDiagonal);
       loadingEl.style.display = 'none';
       // Восстановить состояние конфигуратора на новой модели
-      if (STATE.legsSrc)  loadComponentWithUI(STATE.legsSrc, 'legs', /*silent*/ true);
+      if (STATE.legsSrc)   loadComponentWithUI(STATE.legsSrc, 'legs', /*silent*/ true);
       if (STATE.fabricUrl) applyFabricToSource(null, STATE.fabricUrl);
     },
     onProgress: (percent) => {
@@ -80,18 +122,43 @@ function loadComponentWithUI(path, slotName, silent) {
 
 // ===== Регистрация обработчиков =====
 export function initUI(defaultModelPath) {
-  // ---- Переключение модели (миниатюры под канвасом)
-  $$('#modelsList .thumb').forEach((btn) => {
+  // ---- Миниатюры фото
+  $$('.photo-thumb').forEach((btn) => {
     btn.addEventListener('click', () => {
-      $$('#modelsList .thumb').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      loadModelWithUI(btn.dataset.model);
+      const idx = parseInt(btn.dataset.index, 10) || 0;
+      set360Mode(false);
+      showSlide(idx);
     });
   });
 
-  // ---- Кнопки тканей (применяются к базе)
+  // ---- Кнопка 360°
+  $('#toggle360').addEventListener('click', () => {
+    set360Mode(!STATE.is360);
+  });
+
+  // ---- Карусель: стрелки и точки
+  $('#carouselPrev').addEventListener('click', () => showSlide(STATE.carouselIndex - 1));
+  $('#carouselNext').addEventListener('click', () => showSlide(STATE.carouselIndex + 1));
+  $$('#carouselDots .dot').forEach((dot, i) => {
+    dot.addEventListener('click', () => showSlide(i));
+  });
+
+  // ---- Карточки моделей в Колекції
+  $$('.collection-card.model-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      $$('.collection-card.model-card').forEach((c) => c.classList.remove('active'));
+      card.classList.add('active');
+      STATE.modelName = card.dataset.name || '';
+      ensure360();
+      loadModelWithUI(card.dataset.model);
+      updateSummary();
+    });
+  });
+
+  // ---- Ткани (применяются к базе)
   $$('.fabric-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
+      ensure360();
       $$('.fabric-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       STATE.fabricUrl   = btn.dataset.texture;
@@ -103,14 +170,16 @@ export function initUI(defaultModelPath) {
     });
   });
 
-  // ---- Колор-пикер для базы (тинт тканины)
+  // ---- Колор-пикер для базы
   $('#baseColorPicker').addEventListener('input', (e) => {
+    ensure360();
     applyColorToSource(null, e.target.value);
   });
 
-  // ---- Кнопки ножек
+  // ---- Ножки
   $$('.leg-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
+      ensure360();
       $$('.leg-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       const src = btn.dataset.src;
@@ -127,9 +196,10 @@ export function initUI(defaultModelPath) {
     });
   });
 
-  // ---- Готовые swatches для цвета ножек
+  // ---- Swatches цвета ножек
   $$('#legsColorSwatches .swatch').forEach((btn) => {
     btn.addEventListener('click', () => {
+      ensure360();
       $$('#legsColorSwatches .swatch').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       const color = btn.dataset.color;
@@ -138,22 +208,23 @@ export function initUI(defaultModelPath) {
     });
   });
 
-  // ---- Произвольный цвет для ножек
+  // ---- Произвольный цвет ножек
   $('#legsColorPicker').addEventListener('input', (e) => {
+    ensure360();
     $$('#legsColorSwatches .swatch').forEach((b) => b.classList.remove('active'));
     applyColorToSource('legs', e.target.value);
   });
 
   // ---- «До кошика»
   $('#cartBtn').addEventListener('click', () => {
-    const summary = 'Сваут\n' +
+    const summary = 'Сваут (' + STATE.modelName + ')\n' +
       'Тканина: ' + (STATE.fabricName || 'не вибрано') + '\n' +
       'Ніжки: '   + (STATE.legsName   || 'не вибрано') + '\n' +
       'Ціна: '    + $('#priceCurrent').textContent;
     alert('Додано до кошика:\n\n' + summary);
   });
 
-  // ---- Стартовая загрузка
+  // ---- Стартовая загрузка (3D готов, но карусель остаётся активной)
   loadModelWithUI(defaultModelPath);
   recalculatePrice();
   updateSummary();

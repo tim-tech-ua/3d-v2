@@ -56,13 +56,108 @@
 
 <main class="container product-page">
   <div class="product-viewer">
-    <div id="viewer-wrap">
-      <canvas id="viewer"></canvas>
-      <div id="loading">Завантаження…</div>
+    <div class="viewer-area">
+      <div class="viewer-top">
+        <div class="badges">
+          <span class="badge in-stock">В наявності</span>
+          <span class="badge new">NEW</span>
+        </div>
+        <div class="viewer-actions">
+          <button class="icon-btn-circle" aria-label="В обране">♡</button>
+          <button class="icon-btn-circle" aria-label="Поділитися">⤴</button>
+        </div>
+      </div>
+
+      <!-- Фото-карусель (по умолчанию активна) -->
+      <div class="photo-carousel" id="photoCarousel">
+        <button class="carousel-arrow prev" id="carouselPrev" aria-label="Попередньо">‹</button>
+        <button class="carousel-arrow next" id="carouselNext" aria-label="Далі">›</button>
+        <div class="carousel-slides" id="carouselSlides">
+          <div class="slide active">
+            <div class="photo-placeholder">
+              <span class="icon">🖼</span>
+              <span class="label">Фото 1</span>
+              <span class="browse">or <a href="#">browse files</a></span>
+            </div>
+          </div>
+          <div class="slide">
+            <div class="photo-placeholder">
+              <span class="icon">🖼</span>
+              <span class="label">Фото 2</span>
+              <span class="browse">or <a href="#">browse files</a></span>
+            </div>
+          </div>
+          <div class="slide">
+            <div class="photo-placeholder">
+              <span class="icon">🖼</span>
+              <span class="label">Фото 3</span>
+              <span class="browse">or <a href="#">browse files</a></span>
+            </div>
+          </div>
+          <div class="slide">
+            <div class="photo-placeholder">
+              <span class="icon">🖼</span>
+              <span class="label">Фото 4</span>
+              <span class="browse">or <a href="#">browse files</a></span>
+            </div>
+          </div>
+          <div class="slide">
+            <div class="photo-placeholder">
+              <span class="icon">🖼</span>
+              <span class="label">Фото 5</span>
+              <span class="browse">or <a href="#">browse files</a></span>
+            </div>
+          </div>
+        </div>
+        <div class="carousel-dots" id="carouselDots">
+          <span class="dot active" data-index="0"></span>
+          <span class="dot" data-index="1"></span>
+          <span class="dot" data-index="2"></span>
+          <span class="dot" data-index="3"></span>
+          <span class="dot" data-index="4"></span>
+        </div>
+      </div>
+
+      <!-- 3D вьюер (по умолчанию скрыт через opacity) -->
+      <div class="viewer-3d" id="viewer3d">
+        <div id="viewer-wrap">
+          <canvas id="viewer"></canvas>
+          <div id="loading">Завантаження…</div>
+        </div>
+      </div>
     </div>
-    <div class="thumbs" id="modelsList">
-      <button class="thumb active" data-model="models/ImageToStl.com_Bjorn_Andre_obj.glb" title="Bjorn Andre">Bjorn Andre</button>
-      <button class="thumb" data-model="models/asset.glb" title="Asset">Asset</button>
+
+    <!-- Миниатюры: 5 фото + 360° -->
+    <div class="thumbs" id="thumbsRow">
+      <button class="thumb photo-thumb active" data-index="0">
+        <span class="icon">🖼</span>
+        <span class="num">1</span>
+        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
+      </button>
+      <button class="thumb photo-thumb" data-index="1">
+        <span class="icon">🖼</span>
+        <span class="num">2</span>
+        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
+      </button>
+      <button class="thumb photo-thumb" data-index="2">
+        <span class="icon">🖼</span>
+        <span class="num">3</span>
+        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
+      </button>
+      <button class="thumb photo-thumb" data-index="3">
+        <span class="icon">🖼</span>
+        <span class="num">4</span>
+        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
+      </button>
+      <button class="thumb photo-thumb" data-index="4">
+        <span class="icon">🖼</span>
+        <span class="num">5</span>
+        <span class="browse">or <a href="#" onclick="event.preventDefault()">browse files</a></span>
+      </button>
+      <button class="thumb thumb-360" id="toggle360" title="3D конфігуратор">
+        <span class="plus">+</span>
+        <span class="label">360°</span>
+      </button>
     </div>
   </div>
 
@@ -172,7 +267,17 @@
         <span class="picker-arrow"></span>
       </summary>
       <div class="picker-body">
-        <div class="collection-grid">
+        <div class="collection-grid" id="collectionGrid">
+          <article class="collection-card model-card active" data-model="models/ImageToStl.com_Bjorn_Andre_obj.glb" data-name="Bjorn Andre">
+            <div class="collection-thumb">🪑</div>
+            <h4>Bjorn Andre</h4>
+            <div class="collection-price">50 000 ₴</div>
+          </article>
+          <article class="collection-card model-card" data-model="models/asset.glb" data-name="Asset">
+            <div class="collection-thumb">🪑</div>
+            <h4>Asset</h4>
+            <div class="collection-price">55 000 ₴</div>
+          </article>
           <article class="collection-card">
             <div class="collection-thumb">🪑</div>
             <h4>Стілець Стиль-1 White</h4>
@@ -186,16 +291,6 @@
               <span class="was">1 450 ₴</span>
               <span class="discount">-27%</span>
             </div>
-          </article>
-          <article class="collection-card">
-            <div class="collection-thumb">🪑</div>
-            <h4>Стілець Стиль-1 White</h4>
-            <div class="collection-price">1 450 ₴</div>
-          </article>
-          <article class="collection-card">
-            <div class="collection-thumb">🪑</div>
-            <h4>Стілець Стиль-1 White</h4>
-            <div class="collection-price">1 450 ₴</div>
           </article>
         </div>
       </div>
