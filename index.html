@@ -17,7 +17,7 @@
 <aside id="sidebar">
   <div id="sidebar-header">
     <h1>3D Конфигуратор</h1>
-    <p>Материалы, окружение и позиционирование</p>
+    <p>Материалы и сцена</p>
   </div>
 
   <div class="section">
@@ -75,58 +75,6 @@
         <div class="toggle on" id="shadowToggle"></div>
       </div>
     </div>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">Фотореалистичное окружение (HDRI)</h2>
-    <div class="row col" id="hdriList">
-      <button class="btn full" data-hdri="scena/brown_photostudio_02_4k.hdr" data-name="Photo Studio">Photo Studio (фотостудия)</button>
-      <button class="btn full" data-hdri="scena/docklands_01_4k.hdr" data-name="Docklands">Docklands (доки)</button>
-    </div>
-    <div style="margin-top: 12px;">
-      <div class="toggle-row">
-        <span>Показывать фон HDRI</span>
-        <div class="toggle" id="hdriBgToggle"></div>
-      </div>
-      <div class="slider-row" style="margin-top: 14px;">
-        <div class="slider-label"><span>Поворот окружения</span><span id="envRotVal">0°</span></div>
-        <input type="range" id="envRotSlider" min="0" max="360" step="1" value="0">
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">Позиция и размер модели</h2>
-    <div class="slider-row">
-      <div class="slider-label"><span>Размер объекта</span><span id="scaleVal">1.00</span></div>
-      <input type="range" id="scaleSlider" min="0.1" max="3" step="0.05" value="1">
-    </div>
-    <div class="slider-row">
-      <div class="slider-label"><span>Позиция X</span><span id="posXVal">0.00</span></div>
-      <input type="range" id="posXSlider" min="-5" max="5" step="0.05" value="0">
-    </div>
-    <div class="slider-row">
-      <div class="slider-label"><span>Позиция Y (высота)</span><span id="posYVal">0.00</span></div>
-      <input type="range" id="posYSlider" min="-3" max="3" step="0.05" value="0">
-    </div>
-    <div class="slider-row">
-      <div class="slider-label"><span>Позиция Z</span><span id="posZVal">0.00</span></div>
-      <input type="range" id="posZSlider" min="-5" max="5" step="0.05" value="0">
-    </div>
-    <div class="slider-row">
-      <div class="slider-label"><span>Поворот модели</span><span id="rotYVal">0°</span></div>
-      <input type="range" id="rotYSlider" min="0" max="360" step="1" value="0">
-    </div>
-    <button id="resetTransformBtn" class="btn full" style="margin-top:6px">Сбросить позицию</button>
-  </div>
-
-  <div class="section">
-    <h2 class="section-title">Камера</h2>
-    <div class="slider-row">
-      <div class="slider-label"><span>Угол обзора (FOV)</span><span id="fovVal">45°</span></div>
-      <input type="range" id="fovSlider" min="15" max="90" step="1" value="45">
-    </div>
-    <div class="help">Малый FOV = «телеобъектив», эффект приближения. Большой = широкий угол, видно больше окружения.</div>
   </div>
 
   <div class="section">

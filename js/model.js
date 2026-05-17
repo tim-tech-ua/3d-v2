@@ -1,5 +1,5 @@
 // js/model.js
-// Загрузка моделей, автогенерация UV, разбиение на части, трансформация
+// Загрузка моделей, автогенерация UV, разбиение на части
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -127,12 +127,4 @@ export function getOriginalMaterials() {
 
 export function getInitialHalfHeight() {
   return modelInitialHalfHeight;
-}
-
-// ===== Трансформация модели через holder =====
-export function applyTransformToHolder(holder, transform) {
-  const { scale, x, y, z, rotY } = transform;
-  holder.scale.setScalar(scale);
-  holder.position.set(x, y, z);
-  holder.rotation.y = rotY;
 }

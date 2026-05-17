@@ -1,8 +1,8 @@
 // js/ui.js
-// Связывание интерфейса с логикой: обработчики кнопок, слайдеров, toggle
+// Связывание интерфейса с логикой: обработчики кнопок и toggle
 
 import { sceneApi } from './scene.js';
-import { loadModel, applyTransformToHolder, getInitialHalfHeight } from './model.js';
+import { loadModel, getInitialHalfHeight } from './model.js';
 import {
   setActivePart, getActivePartKey, resetActivePart,
   setOnActivePartChanged,
@@ -20,15 +20,6 @@ const activePartLabel = $('#activePartLabel');
 const colorPicker = $('#colorPicker');
 const colorValueEl = $('#colorValue');
 const loadingEl = $('#loading');
-
-// ===== Состояние трансформации модели =====
-const transform = { scale: 1, x: 0, y: 0, z: 0, rotY: 0 };
-
-function applyTransform() {
-  applyTransformToHolder(sceneApi.modelHolder, transform);
-  // Двигаем теневой пол под низ модели
-  sceneApi.setShadowFloorY(transform.y - getInitialHalfHeight() * transform.scale);
-}
 
 // ===== Построение списка частей модели =====
 function buildPartsUI(parts) {
@@ -68,17 +59,6 @@ setOnActivePartChanged((key, part) => {
   }
 });
 
-// ===== Сброс UI трансформации =====
-function resetTransformUI() {
-  transform.scale = 1; transform.x = 0; transform.y = 0; transform.z = 0; transform.rotY = 0;
-  $('#scaleSlider').value = 1; $('#scaleVal').textContent = '1.00';
-  $('#posXSlider').value = 0;  $('#posXVal').textContent = '0.00';
-  $('#posYSlider').value = 0;  $('#posYVal').textContent = '0.00';
-  $('#posZSlider').value = 0;  $('#posZVal').textContent = '0.00';
-  $('#rotYSlider').value = 0;  $('#rotYVal').textContent = '0°';
-  applyTransform();
-}
-
 // ===== Загрузка модели =====
 function loadModelWithUI(path) {
   loadingEl.style.display = 'block';
@@ -90,7 +70,8 @@ function loadModelWithUI(path) {
   loadModel(path, sceneApi.modelHolder, {
     onLoaded: (parts, info) => {
       sceneApi.fitCameraToModel(info.sizeDiagonal);
-      resetTransformUI();
+      // Модель центрирована в model.js, низ находится на -halfHeight
+      sceneApi.setShadowFloorY(-getInitialHalfHeight());
       buildPartsUI(parts);
       loadingEl.style.display = 'none';
     },
@@ -156,70 +137,6 @@ export function initUI(defaultModelPath) {
   shadowToggle.addEventListener('click', () => {
     shadowToggle.classList.toggle('on');
     sceneApi.setShadowVisible(shadowToggle.classList.contains('on'));
-  });
-
-  // ----- HDRI -----
-  $$('#hdriList .btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      if (btn.classList.contains('active')) {
-        // Повторное нажатие — выключить HDRI
-        btn.classList.remove('active');
-        sceneApi.clearHDRI();
-        return;
-      }
-      $$('#hdriList .btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      sceneApi.applyHDRI(btn.dataset.hdri, btn.dataset.name);
-    });
-  });
-
-  // ----- Фон HDRI toggle -----
-  const hdriBgToggle = $('#hdriBgToggle');
-  hdriBgToggle.addEventListener('click', () => {
-    hdriBgToggle.classList.toggle('on');
-    sceneApi.setHdriBackgroundVisible(hdriBgToggle.classList.contains('on'));
-  });
-
-  // ----- Поворот окружения -----
-  $('#envRotSlider').addEventListener('input', (e) => {
-    const deg = parseFloat(e.target.value);
-    $('#envRotVal').textContent = e.target.value + '°';
-    sceneApi.applyEnvRotation(deg * Math.PI / 180);
-  });
-
-  // ----- Трансформация модели -----
-  $('#scaleSlider').addEventListener('input', (e) => {
-    transform.scale = parseFloat(e.target.value);
-    $('#scaleVal').textContent = transform.scale.toFixed(2);
-    applyTransform();
-  });
-  $('#posXSlider').addEventListener('input', (e) => {
-    transform.x = parseFloat(e.target.value);
-    $('#posXVal').textContent = transform.x.toFixed(2);
-    applyTransform();
-  });
-  $('#posYSlider').addEventListener('input', (e) => {
-    transform.y = parseFloat(e.target.value);
-    $('#posYVal').textContent = transform.y.toFixed(2);
-    applyTransform();
-  });
-  $('#posZSlider').addEventListener('input', (e) => {
-    transform.z = parseFloat(e.target.value);
-    $('#posZVal').textContent = transform.z.toFixed(2);
-    applyTransform();
-  });
-  $('#rotYSlider').addEventListener('input', (e) => {
-    transform.rotY = parseFloat(e.target.value) * Math.PI / 180;
-    $('#rotYVal').textContent = e.target.value + '°';
-    applyTransform();
-  });
-  $('#resetTransformBtn').addEventListener('click', resetTransformUI);
-
-  // ----- FOV камеры -----
-  $('#fovSlider').addEventListener('input', (e) => {
-    const v = parseFloat(e.target.value);
-    $('#fovVal').textContent = e.target.value + '°';
-    sceneApi.setCameraFOV(v);
   });
 
   // ----- Сброс материалов -----

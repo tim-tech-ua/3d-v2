@@ -1,12 +1,11 @@
 // js/scene.js
-// Управление 3D-сценой: рендерер, камера, освещение, HDRI, быстрые сцены
+// Управление 3D-сценой: рендерер, камера, освещение, быстрые сцены
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
-// ===== Пресеты быстрых сцен (без HDRI) =====
+// ===== Пресеты быстрых сцен =====
 const SCENES = {
   studio: { bg: 0xf0f0f0, dirColor: 0xffffff, dirIntensity: 1.2, ambColor: 0xffffff, ambIntensity: 0.4, exposure: 1.0 },
   warm:   { bg: 0xefe4d4, dirColor: 0xffdcb0, dirIntensity: 1.5, ambColor: 0xffdcb0, ambIntensity: 0.6, exposure: 1.1 },
@@ -19,18 +18,10 @@ const SCENES = {
 let renderer, scene, camera, controls;
 let pmrem, defaultEnv;
 let dirLight, ambLight, shadowFloor;
-let modelHolder; // Group, в который кладётся загруженная модель
-
-let currentSceneName = 'studio';
-let currentHDRI = null;            // PMREM-текстура для environment
-let currentHDRIBackground = null;  // оригинал для фона
-let showHdriBackground = false;
-let envRotationRad = 0;
-
-const rgbeLoader = new RGBELoader();
+let modelHolder;
 
 // ===== Инициализация =====
-export function initScene(canvas, viewerWrap, loadingEl) {
+export function initScene(canvas, viewerWrap) {
   const getSize = () => ({ w: viewerWrap.clientWidth, h: viewerWrap.clientHeight });
 
   // Renderer
@@ -104,9 +95,6 @@ export function initScene(canvas, viewerWrap, loadingEl) {
   }
   animate();
 
-  // Сохраняем ссылку на loadingEl для HDRI
-  sceneApi._loadingEl = loadingEl;
-
   return sceneApi;
 }
 
@@ -114,64 +102,12 @@ export function initScene(canvas, viewerWrap, loadingEl) {
 function applyScene(name) {
   const s = SCENES[name];
   if (!s) return;
-  currentSceneName = name;
-  if (!currentHDRI || !showHdriBackground) {
-    scene.background = new THREE.Color(s.bg);
-  }
+  scene.background = new THREE.Color(s.bg);
   dirLight.color.setHex(s.dirColor);
   dirLight.intensity = s.dirIntensity;
   ambLight.color.setHex(s.ambColor);
   ambLight.intensity = s.ambIntensity;
   renderer.toneMappingExposure = s.exposure;
-}
-
-// ===== Загрузить HDRI =====
-function applyHDRI(path, name) {
-  const loadingEl = sceneApi._loadingEl;
-  if (loadingEl) {
-    loadingEl.style.display = 'block';
-    loadingEl.textContent = 'Загрузка HDRI: ' + name + '...';
-  }
-  rgbeLoader.load(path, (texture) => {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
-    currentHDRIBackground = texture;
-    const pmremTexture = pmrem.fromEquirectangular(texture).texture;
-    currentHDRI = pmremTexture;
-    scene.environment = pmremTexture;
-    if (showHdriBackground) scene.background = texture;
-    applyEnvRotation(envRotationRad);
-    if (loadingEl) loadingEl.style.display = 'none';
-  }, undefined, (err) => {
-    console.error('Ошибка загрузки HDRI:', err);
-    if (loadingEl) loadingEl.style.display = 'none';
-    alert('Не удалось загрузить HDRI: ' + path);
-  });
-}
-
-function clearHDRI() {
-  scene.environment = defaultEnv;
-  currentHDRI = null;
-  currentHDRIBackground = null;
-  applyScene(currentSceneName);
-}
-
-// ===== Управление фоном HDRI =====
-function setHdriBackgroundVisible(visible) {
-  showHdriBackground = visible;
-  if (showHdriBackground && currentHDRIBackground) {
-    scene.background = currentHDRIBackground;
-  } else {
-    const s = SCENES[currentSceneName];
-    scene.background = new THREE.Color(s.bg);
-  }
-}
-
-// ===== Поворот HDRI =====
-function applyEnvRotation(rad) {
-  envRotationRad = rad;
-  // Поддерживается с three.js r163+, но не критично в r160 — используем безопасное присваивание
-  if ('environmentRotation' in scene) scene.environmentRotation = new THREE.Euler(0, rad, 0);
-  if ('backgroundRotation' in scene)  scene.backgroundRotation  = new THREE.Euler(0, rad, 0);
 }
 
 // ===== Тень на полу =====
@@ -181,12 +117,6 @@ function setShadowVisible(visible) {
 
 function setShadowFloorY(y) {
   shadowFloor.position.y = y;
-}
-
-// ===== Камера =====
-function setCameraFOV(fovDeg) {
-  camera.fov = fovDeg;
-  camera.updateProjectionMatrix();
 }
 
 // Адаптация камеры под размер модели после её загрузки
@@ -218,26 +148,16 @@ function getCanvas() {
 
 // ===== Публичный API =====
 export const sceneApi = {
-  // объекты
   get scene() { return scene; },
   get camera() { return camera; },
   get renderer() { return renderer; },
   get controls() { return controls; },
   get modelHolder() { return modelHolder; },
 
-  // методы
   applyScene,
-  applyHDRI,
-  clearHDRI,
-  setHdriBackgroundVisible,
-  applyEnvRotation,
   setShadowVisible,
   setShadowFloorY,
-  setCameraFOV,
   fitCameraToModel,
   renderFrame,
-  getCanvas,
-
-  // внутреннее (loading element для HDRI)
-  _loadingEl: null
+  getCanvas
 };
