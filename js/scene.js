@@ -49,6 +49,9 @@ export function initScene(canvas, viewerWrap) {
   controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
+  // Запрет смотреть на модель снизу: камера может вращаться от макушки до горизонта,
+  // но не опускаться ниже уровня цели.
+  controls.maxPolarAngle = Math.PI / 2;
 
   // Освещение
   dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
