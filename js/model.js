@@ -45,8 +45,6 @@ function ensureUVs(mesh) {
 // source = null для базы, slotName для подкомпонента (нужно при удалении слота)
 function registerMeshInParts(mesh, source) {
   ensureUVs(mesh);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
 
   originalMaterials.set(mesh, mesh.material.clone());
 

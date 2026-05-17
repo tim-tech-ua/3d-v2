@@ -17,7 +17,7 @@ const SCENES = {
 // ===== Состояние модуля =====
 let renderer, scene, camera, controls;
 let pmrem, defaultEnv;
-let dirLight, ambLight, shadowFloor;
+let dirLight, ambLight;
 let modelHolder;
 
 // ===== Инициализация =====
@@ -32,8 +32,6 @@ export function initScene(canvas, viewerWrap) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   // Scene и стандартное окружение (RoomEnvironment) для базовых отражений
   scene = new THREE.Scene();
@@ -56,24 +54,10 @@ export function initScene(canvas, viewerWrap) {
   // Освещение
   dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
   dirLight.position.set(8, 12, 6);
-  dirLight.castShadow = true;
-  dirLight.shadow.mapSize.set(2048, 2048);
-  dirLight.shadow.camera.near = 0.5;
-  dirLight.shadow.camera.far = 50;
-  dirLight.shadow.bias = -0.0005;
   scene.add(dirLight);
 
   ambLight = new THREE.AmbientLight(0xffffff, 0.4);
   scene.add(ambLight);
-
-  // Видимый пол: белый матовый, принимает тени
-  shadowFloor = new THREE.Mesh(
-    new THREE.PlaneGeometry(50, 50),
-    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0 })
-  );
-  shadowFloor.rotation.x = -Math.PI / 2;
-  shadowFloor.receiveShadow = true;
-  scene.add(shadowFloor);
 
   // Контейнер для модели
   modelHolder = new THREE.Group();
@@ -113,24 +97,6 @@ function applyScene(name) {
   renderer.toneMappingExposure = s.exposure;
 }
 
-// ===== Тень/пол =====
-// Тоггл отключает отбрасывание теней от direct-света. Пол при этом остаётся виден.
-function setShadowVisible(visible) {
-  dirLight.castShadow = visible;
-}
-
-function setShadowFloorY(y) {
-  shadowFloor.position.y = y;
-}
-
-// Подгоняет пол под низ всего содержимого modelHolder (база + компоненты)
-function fitShadowFloorToModel() {
-  if (!modelHolder) return;
-  const box = new THREE.Box3().setFromObject(modelHolder);
-  if (!isFinite(box.min.y)) return;
-  shadowFloor.position.y = box.min.y;
-}
-
 // Адаптация камеры под размер модели после её загрузки
 function fitCameraToModel(modelSizeDiagonal) {
   camera.position.set(modelSizeDiagonal / 2, modelSizeDiagonal / 3, modelSizeDiagonal / 1.2);
@@ -139,14 +105,6 @@ function fitCameraToModel(modelSizeDiagonal) {
   controls.minDistance = modelSizeDiagonal / 4;
   controls.maxDistance = modelSizeDiagonal * 5;
   controls.update();
-
-  // Подгонка теневой камеры
-  const sh = modelSizeDiagonal / 1.2;
-  dirLight.shadow.camera.left = -sh;
-  dirLight.shadow.camera.right = sh;
-  dirLight.shadow.camera.top = sh;
-  dirLight.shadow.camera.bottom = -sh;
-  dirLight.shadow.camera.updateProjectionMatrix();
 }
 
 // ===== Отрисовка одного кадра (для скриншота) =====
@@ -167,9 +125,6 @@ export const sceneApi = {
   get modelHolder() { return modelHolder; },
 
   applyScene,
-  setShadowVisible,
-  setShadowFloorY,
-  fitShadowFloorToModel,
   fitCameraToModel,
   renderFrame,
   getCanvas

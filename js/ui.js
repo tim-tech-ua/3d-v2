@@ -89,7 +89,6 @@ function loadModelWithUI(path) {
   loadModel(path, sceneApi.modelHolder, {
     onLoaded: (parts, info) => {
       sceneApi.fitCameraToModel(info.sizeDiagonal);
-      sceneApi.fitShadowFloorToModel();
       buildPartsUI(parts);
       loadingEl.style.display = 'none';
     },
@@ -110,7 +109,6 @@ function loadComponentWithUI(path, slotName) {
   loadComponent(path, slotName, sceneApi.modelHolder, {
     onLoaded: (parts) => {
       buildPartsUI(parts);
-      sceneApi.fitShadowFloorToModel();
       loadingEl.style.display = 'none';
     },
     onError: (err) => {
@@ -143,10 +141,7 @@ export function initUI(defaultModelPath) {
       if (src) {
         loadComponentWithUI(src, slot);
       } else {
-        removeComponent(slot, sceneApi.modelHolder, (parts) => {
-          buildPartsUI(parts);
-          sceneApi.fitShadowFloorToModel();
-        });
+        removeComponent(slot, sceneApi.modelHolder, (parts) => buildPartsUI(parts));
       }
     });
   });
@@ -185,13 +180,6 @@ export function initUI(defaultModelPath) {
       btn.classList.add('active');
       sceneApi.applyScene(btn.dataset.scene);
     });
-  });
-
-  // ----- Тень toggle -----
-  const shadowToggle = $('#shadowToggle');
-  shadowToggle.addEventListener('click', () => {
-    shadowToggle.classList.toggle('on');
-    sceneApi.setShadowVisible(shadowToggle.classList.contains('on'));
   });
 
   // ----- Сброс материалов -----
