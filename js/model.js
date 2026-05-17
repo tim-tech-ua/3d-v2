@@ -10,6 +10,7 @@ const gltfLoader = new GLTFLoader();
 let currentModel = null;                  // базовая модель
 const currentComponents = new Map();      // slotName -> Object3D
 let modelInitialHalfHeight = 0;
+let baseBox = null;                       // bbox базы в её локальных координатах (для авто-выравнивания компонентов)
 const parts = new Map();                  // partKey -> { name, meshes[], texture, color, textureUrl, source }
 const originalMaterials = new Map();      // mesh -> material.clone()
 
@@ -100,6 +101,7 @@ function disposeBase(holder) {
   currentModel = null;
   parts.clear();
   originalMaterials.clear();
+  baseBox = null;
   holder.position.set(0, 0, 0);
 }
 
@@ -124,6 +126,7 @@ export function loadModel(path, holder, callbacks = {}) {
     // Сдвигаем holder, а не саму модель, чтобы добавляемые позже компоненты
     // сохраняли своё естественное положение относительно базы.
     const box = new THREE.Box3().setFromObject(model);
+    baseBox = box.clone();
     const sizeDiagonal = box.getSize(new THREE.Vector3()).length();
     const center = box.getCenter(new THREE.Vector3());
     holder.position.set(-center.x, -center.y, -center.z);
@@ -141,11 +144,10 @@ export function loadModel(path, holder, callbacks = {}) {
 }
 
 // ===== Загрузка подкомпонента в слот =====
-// Файл компонента должен быть авторен в Blender в той же системе координат,
-// что и база (если базу не двигали — компонент тоже на своём месте).
-// При повторном вызове с тем же slot предыдущий компонент удаляется.
+// Авто-выравнивание (по умолчанию): top компонента → bottom базы, X/Z центрирование.
+// Чтобы загрузить компонент "как есть" (без выравнивания), передайте { align: 'none' }.
 export function loadComponent(path, slotName, holder, callbacks = {}) {
-  const { onLoaded, onError } = callbacks;
+  const { onLoaded, onError, align = 'auto' } = callbacks;
 
   disposeComponent(slotName, holder);
 
@@ -159,6 +161,18 @@ export function loadComponent(path, slotName, holder, callbacks = {}) {
         registerMeshInParts(c, slotName);
       }
     });
+
+    // Авто-выравнивание относительно базы по bbox-у
+    if (align === 'auto' && baseBox) {
+      const compBox = new THREE.Box3().setFromObject(model);
+      const baseCenter = baseBox.getCenter(new THREE.Vector3());
+      const compCenter = compBox.getCenter(new THREE.Vector3());
+      model.position.set(
+        baseCenter.x - compCenter.x,
+        baseBox.min.y - compBox.max.y,
+        baseCenter.z - compCenter.z
+      );
+    }
 
     currentComponents.set(slotName, model);
     holder.add(model);
