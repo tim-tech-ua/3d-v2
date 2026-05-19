@@ -1,0 +1,193 @@
+{# catalog/view/theme/default/template/extension/module/configurator3d.twig
+   3D-конфігуратор: окремий блок під стандартною карткою товара. #}
+
+<link rel="stylesheet" href="catalog/view/javascript/configurator3d/css/styles.css">
+
+<section class="cfg3d" id="cfg3d-{{ cfg3d_product_id|default(0) }}">
+  <div class="cfg3d-section-head">
+    <h2 class="cfg3d-section-title">3D Конфігуратор</h2>
+    <p class="cfg3d-section-subtitle">Налаштуйте товар під себе: тканина, опори, колір</p>
+  </div>
+
+  <div class="cfg3d-layout">
+    <div class="cfg3d-viewer">
+      <div class="cfg3d-viewer-area">
+        <div class="cfg3d-viewer-top">
+          <div class="cfg3d-badges">
+            <span class="cfg3d-badge in-stock">В наявності</span>
+            <span class="cfg3d-badge new">NEW</span>
+          </div>
+          <div class="cfg3d-viewer-actions">
+            <button class="cfg3d-icon-btn-circle" type="button" aria-label="В обране">♡</button>
+            <button class="cfg3d-icon-btn-circle" type="button" aria-label="Поділитися">⤴</button>
+          </div>
+        </div>
+
+        <div class="cfg3d-photo-carousel" id="cfg3dPhotoCarousel">
+          <button class="cfg3d-carousel-arrow prev" id="cfg3dCarouselPrev" type="button" aria-label="Попередньо">‹</button>
+          <button class="cfg3d-carousel-arrow next" id="cfg3dCarouselNext" type="button" aria-label="Далі">›</button>
+          <div class="cfg3d-carousel-slides" id="cfg3dCarouselSlides">
+            <div class="cfg3d-slide active" style="background-image:url('catalog/view/javascript/configurator3d/image/01.png')"></div>
+            <div class="cfg3d-slide" style="background-image:url('catalog/view/javascript/configurator3d/image/02.png')"></div>
+            <div class="cfg3d-slide" style="background-image:url('catalog/view/javascript/configurator3d/image/03.png')"></div>
+            <div class="cfg3d-slide" style="background-image:url('catalog/view/javascript/configurator3d/image/04.png')"></div>
+          </div>
+          <div class="cfg3d-carousel-dots" id="cfg3dCarouselDots">
+            <span class="cfg3d-dot active" data-index="0"></span>
+            <span class="cfg3d-dot" data-index="1"></span>
+            <span class="cfg3d-dot" data-index="2"></span>
+            <span class="cfg3d-dot" data-index="3"></span>
+          </div>
+        </div>
+
+        <div class="cfg3d-viewer-3d" id="cfg3dViewer3d">
+          <div id="cfg3d-viewer-wrap">
+            <canvas id="cfg3d-viewer"></canvas>
+            <div id="cfg3d-loading">Завантаження…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cfg3d-thumbs" id="cfg3dThumbsRow">
+        <button class="cfg3d-thumb photo-thumb active" type="button" data-index="0" style="background-image:url('catalog/view/javascript/configurator3d/image/01.png')"></button>
+        <button class="cfg3d-thumb photo-thumb" type="button" data-index="1" style="background-image:url('catalog/view/javascript/configurator3d/image/02.png')"></button>
+        <button class="cfg3d-thumb photo-thumb" type="button" data-index="2" style="background-image:url('catalog/view/javascript/configurator3d/image/03.png')"></button>
+        <button class="cfg3d-thumb photo-thumb" type="button" data-index="3" style="background-image:url('catalog/view/javascript/configurator3d/image/04.png')"></button>
+        <button class="cfg3d-thumb thumb-360" type="button" id="cfg3dToggle360" title="3D конфігуратор">
+          <span class="plus">+</span>
+          <span class="label">360°</span>
+        </button>
+      </div>
+    </div>
+
+    <aside class="cfg3d-controls">
+      <div class="cfg3d-extras-row">
+        <span class="cfg3d-extras-label">Доплата за опції:</span>
+        <span class="cfg3d-extras-price" id="cfg3dExtrasPrice">0 ₴</span>
+      </div>
+
+      <details class="cfg3d-picker" open>
+        <summary>
+          <span class="cfg3d-picker-title">Підібрати кольори тканини</span>
+          <span class="cfg3d-picker-count">(6)</span>
+          <span class="cfg3d-picker-arrow"></span>
+        </summary>
+        <div class="cfg3d-picker-body">
+          <div class="cfg3d-fabric-grid" id="cfg3dFabricList">
+            <button class="cfg3d-fabric-btn" type="button" data-texture="catalog/view/javascript/configurator3d/textures/MAGIC_VELVET_2243.png" data-name="Magic Velvet" data-price="0" style="background-image:url('catalog/view/javascript/configurator3d/textures/MAGIC_VELVET_2243.png')" title="Magic Velvet"></button>
+            <button class="cfg3d-fabric-btn" type="button" data-texture="catalog/view/javascript/configurator3d/textures/London_03.png" data-name="London 03" data-price="500" style="background-image:url('catalog/view/javascript/configurator3d/textures/London_03.png')" title="London 03"></button>
+            <button class="cfg3d-fabric-btn" type="button" data-texture="catalog/view/javascript/configurator3d/textures/Enjoy_New_1.png" data-name="Enjoy New" data-price="800" style="background-image:url('catalog/view/javascript/configurator3d/textures/Enjoy_New_1.png')" title="Enjoy New"></button>
+            <button class="cfg3d-fabric-btn" type="button" data-texture="catalog/view/javascript/configurator3d/textures/COVER_83.png" data-name="Cover 83" data-price="1200" style="background-image:url('catalog/view/javascript/configurator3d/textures/COVER_83.png')" title="Cover 83"></button>
+            <button class="cfg3d-fabric-btn" type="button" data-texture="catalog/view/javascript/configurator3d/textures/Boston_11.png" data-name="Boston 11" data-price="1500" style="background-image:url('catalog/view/javascript/configurator3d/textures/Boston_11.png')" title="Boston 11"></button>
+            <button class="cfg3d-fabric-btn" type="button" data-texture="catalog/view/javascript/configurator3d/textures/BARREL_04.png" data-name="Barrel 04" data-price="2000" style="background-image:url('catalog/view/javascript/configurator3d/textures/BARREL_04.png')" title="Barrel 04"></button>
+          </div>
+          <div class="cfg3d-color-control">
+            <label for="cfg3dBaseColorPicker">Відтінок тканини:</label>
+            <input type="color" id="cfg3dBaseColorPicker" value="#ffffff">
+          </div>
+        </div>
+      </details>
+
+      <details class="cfg3d-picker">
+        <summary>
+          <span class="cfg3d-picker-title">Підібрати ніжки</span>
+          <span class="cfg3d-picker-count">(3)</span>
+          <span class="cfg3d-picker-arrow"></span>
+        </summary>
+        <div class="cfg3d-picker-body">
+          <div class="cfg3d-legs-list" id="cfg3dLegsList">
+            <button class="cfg3d-leg-btn" type="button" data-slot="legs" data-src="catalog/view/javascript/configurator3d/models/opora/Bjorn_LC_obj.glb" data-name="Опора LC" data-price="5000">
+              <span class="leg-thumb">LC</span>
+              <span class="leg-info">
+                <span class="leg-name">Опора LC</span>
+                <span class="leg-price">+5 000 ₴</span>
+              </span>
+            </button>
+            <button class="cfg3d-leg-btn" type="button" data-slot="legs" data-src="catalog/view/javascript/configurator3d/models/opora/Bjorn_LR_obj.glb" data-name="Опора LR" data-price="7000">
+              <span class="leg-thumb">LR</span>
+              <span class="leg-info">
+                <span class="leg-name">Опора LR</span>
+                <span class="leg-price">+7 000 ₴</span>
+              </span>
+            </button>
+            <button class="cfg3d-leg-btn" type="button" data-slot="legs" data-src="" data-name="Без опори" data-price="0">
+              <span class="leg-thumb">—</span>
+              <span class="leg-info">
+                <span class="leg-name">Без опори</span>
+                <span class="leg-price">+0 ₴</span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </details>
+
+      <details class="cfg3d-picker">
+        <summary>
+          <span class="cfg3d-picker-title">Підібрати колір ніжок</span>
+          <span class="cfg3d-picker-count">(6)</span>
+          <span class="cfg3d-picker-arrow"></span>
+        </summary>
+        <div class="cfg3d-picker-body">
+          <div class="cfg3d-color-swatches" id="cfg3dLegsColorSwatches">
+            <button class="cfg3d-swatch" type="button" data-color="#ffffff" title="Білий" style="background:#ffffff"></button>
+            <button class="cfg3d-swatch" type="button" data-color="#1a1a1a" title="Чорний" style="background:#1a1a1a"></button>
+            <button class="cfg3d-swatch" type="button" data-color="#8b6f47" title="Дуб" style="background:#8b6f47"></button>
+            <button class="cfg3d-swatch" type="button" data-color="#3a2410" title="Венге" style="background:#3a2410"></button>
+            <button class="cfg3d-swatch" type="button" data-color="#c0c0c0" title="Хром" style="background:#c0c0c0"></button>
+            <button class="cfg3d-swatch" type="button" data-color="#b8860b" title="Латунь" style="background:#b8860b"></button>
+          </div>
+          <div class="cfg3d-color-control">
+            <label for="cfg3dLegsColorPicker">Свій колір:</label>
+            <input type="color" id="cfg3dLegsColorPicker" value="#ffffff">
+          </div>
+        </div>
+      </details>
+
+      <details class="cfg3d-picker" open>
+        <summary>
+          <span class="cfg3d-picker-title">Колекція</span>
+          <span class="cfg3d-picker-count">(4)</span>
+          <span class="cfg3d-picker-arrow"></span>
+        </summary>
+        <div class="cfg3d-picker-body">
+          <div class="cfg3d-collection-grid" id="cfg3dCollectionGrid">
+            <article class="cfg3d-collection-card model-card active" data-model="catalog/view/javascript/configurator3d/models/ImageToStl.com_Bjorn_Andre_obj.glb" data-name="Bjorn Andre">
+              <div class="cfg3d-collection-thumb" style="background-image:url('catalog/view/javascript/configurator3d/image/10.png')"></div>
+              <h4>Bjorn Andre</h4>
+              <div class="cfg3d-collection-price">50 000 ₴</div>
+            </article>
+            <article class="cfg3d-collection-card model-card" data-model="catalog/view/javascript/configurator3d/models/asset.glb" data-name="Asset">
+              <div class="cfg3d-collection-thumb" style="background-image:url('catalog/view/javascript/configurator3d/image/20.png')"></div>
+              <h4>Asset</h4>
+              <div class="cfg3d-collection-price">55 000 ₴</div>
+            </article>
+            <article class="cfg3d-collection-card">
+              <div class="cfg3d-collection-thumb" style="background-image:url('catalog/view/javascript/configurator3d/image/30.png')"></div>
+              <h4>Стілець Стиль-1 White</h4>
+              <div class="cfg3d-collection-price">1 450 ₴</div>
+            </article>
+            <article class="cfg3d-collection-card highlight">
+              <div class="cfg3d-collection-thumb" style="background-image:url('catalog/view/javascript/configurator3d/image/40.png')"></div>
+              <h4>Стілець Стиль-1 White</h4>
+              <div class="cfg3d-collection-prices">
+                <span class="now">2 000 ₴</span>
+                <span class="was">1 450 ₴</span>
+                <span class="discount">-27%</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </details>
+    </aside>
+  </div>
+</section>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="catalog/view/javascript/configurator3d/js/main.js"></script>

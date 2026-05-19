@@ -1,0 +1,431 @@
+/* 3D Configurator — все стили заскоупированы под .cfg3d, чтобы не пересекаться с темой OpenCart */
+
+.cfg3d, .cfg3d * { box-sizing: border-box; }
+
+.cfg3d {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  color: #1a1a1a;
+  background: #fff;
+  margin: 32px 0;
+  padding: 0;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cfg3d button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.cfg3d a { color: inherit; text-decoration: none; }
+
+.cfg3d-section-head {
+  margin-bottom: 18px;
+  padding: 0 4px;
+}
+
+.cfg3d-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #1a1a1a;
+}
+
+.cfg3d-section-subtitle {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
+}
+
+.cfg3d-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+/* ===== Вьюер ===== */
+.cfg3d-viewer { position: relative; }
+
+.cfg3d-viewer-area {
+  position: relative;
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.cfg3d-viewer-top {
+  position: absolute;
+  top: 16px; left: 16px; right: 16px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cfg3d-badges { display: flex; gap: 8px; pointer-events: auto; }
+
+.cfg3d-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cfg3d-badge.in-stock { background: #d4f5d4; color: #1b6e1b; }
+.cfg3d-badge.new      { background: #ffe8c1; color: #c4720a; }
+
+.cfg3d-viewer-actions { display: flex; gap: 8px; pointer-events: auto; }
+
+.cfg3d-icon-btn-circle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s;
+}
+
+.cfg3d-icon-btn-circle:hover { transform: scale(1.06); }
+
+/* Карусель */
+.cfg3d-photo-carousel {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 1;
+  transition: opacity 0.25s;
+}
+
+.cfg3d-viewer-area.mode-3d .cfg3d-photo-carousel {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cfg3d-carousel-arrow {
+  position: absolute; top: 50%;
+  transform: translateY(-50%);
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; line-height: 1;
+  color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2;
+  transition: transform 0.15s;
+}
+
+.cfg3d-carousel-arrow:hover { transform: translateY(-50%) scale(1.06); }
+.cfg3d-carousel-arrow.prev { left: 20px; }
+.cfg3d-carousel-arrow.next { right: 20px; }
+
+.cfg3d-carousel-slides { position: relative; width: 100%; height: 100%; }
+
+.cfg3d-slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.cfg3d-slide.active { opacity: 1; pointer-events: auto; }
+
+.cfg3d-carousel-dots {
+  position: absolute; bottom: 16px; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 6px;
+  z-index: 2;
+}
+
+.cfg3d-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #bbb;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.cfg3d-dot:hover { transform: scale(1.2); }
+.cfg3d-dot.active { background: #1a1a1a; }
+
+/* 3D вьюер */
+.cfg3d-viewer-3d {
+  position: absolute; inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.cfg3d-viewer-area.mode-3d .cfg3d-viewer-3d { opacity: 1; pointer-events: auto; }
+
+.cfg3d #cfg3d-viewer-wrap { width: 100%; height: 100%; position: relative; }
+.cfg3d #cfg3d-viewer { width: 100%; height: 100%; display: block; }
+
+.cfg3d #cfg3d-loading {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  display: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 4;
+}
+
+/* Миниатюры */
+.cfg3d-thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.cfg3d-thumb {
+  height: 90px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background-color: #fff;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  color: #888;
+  transition: all 0.15s;
+  padding: 4px;
+}
+
+.cfg3d-thumb:hover { border-color: #888; }
+.cfg3d-thumb.active { border: 2px solid #1a1a1a; padding: 3px; }
+
+.cfg3d-thumb.thumb-360 { border: 1px solid #c8c8c8; background-color: #fff; }
+.cfg3d-thumb.thumb-360 .plus { font-size: 26px; font-weight: 300; color: #1a1a1a; line-height: 1; }
+.cfg3d-thumb.thumb-360 .label { font-weight: 700; color: #1a1a1a; font-size: 12px; letter-spacing: 0.5px; }
+.cfg3d-thumb.thumb-360.active { background-color: #1a1a1a; border-color: #1a1a1a; }
+.cfg3d-thumb.thumb-360.active .plus,
+.cfg3d-thumb.thumb-360.active .label { color: #fff; }
+
+/* ===== Правая колонка ===== */
+.cfg3d-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cfg3d-extras-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.cfg3d-extras-label { color: #666; }
+.cfg3d-extras-price { font-weight: 700; font-size: 18px; color: #1a1a1a; }
+
+/* Пикеры */
+.cfg3d-picker {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.cfg3d-picker summary {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.cfg3d-picker summary::-webkit-details-marker { display: none; }
+.cfg3d-picker summary::marker { display: none; content: ""; }
+
+.cfg3d-picker-title { font-size: 14px; font-weight: 600; flex: 1; color: #1a1a1a; }
+.cfg3d-picker-count { color: #888; font-size: 13px; margin-right: 12px; }
+
+.cfg3d-picker-arrow {
+  width: 8px; height: 8px;
+  border-right: 2px solid #888;
+  border-bottom: 2px solid #888;
+  transform: rotate(45deg);
+  transition: transform 0.2s;
+}
+
+.cfg3d-picker[open] .cfg3d-picker-arrow { transform: rotate(-135deg); }
+
+.cfg3d-picker-body { padding: 4px 20px 20px; }
+
+/* Ткани */
+.cfg3d-fabric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+
+.cfg3d-fabric-btn {
+  aspect-ratio: 1;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.cfg3d-fabric-btn:hover { border-color: #ddd; transform: scale(1.03); }
+.cfg3d-fabric-btn.active { border-color: #1a1a1a; }
+
+/* Ножки */
+.cfg3d-legs-list { display: flex; flex-direction: column; gap: 8px; }
+
+.cfg3d-leg-btn {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  text-align: left;
+  background: #fff;
+  transition: all 0.15s;
+  color: #1a1a1a;
+}
+
+.cfg3d-leg-btn:hover { border-color: #1a1a1a; background: #fafafa; }
+.cfg3d-leg-btn.active { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+
+.cfg3d-leg-btn .leg-thumb {
+  width: 44px; height: 44px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  color: #1a1a1a;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.cfg3d-leg-btn.active .leg-thumb { background: #fff; }
+
+.cfg3d-leg-btn .leg-info { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.cfg3d-leg-btn .leg-name { font-weight: 600; }
+.cfg3d-leg-btn .leg-price { font-size: 12px; opacity: 0.7; }
+
+/* Swatches */
+.cfg3d-color-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 10px;
+}
+
+.cfg3d-swatch {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.cfg3d-swatch:hover { transform: scale(1.08); }
+.cfg3d-swatch.active { border-color: #1a1a1a; border-width: 3px; box-shadow: 0 0 0 2px #fff inset; }
+
+.cfg3d-color-control {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.cfg3d-color-control input[type="color"] {
+  width: 44px; height: 36px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  background: none;
+  padding: 2px;
+}
+
+.cfg3d-color-control input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.cfg3d-color-control input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+
+/* Коллекция */
+.cfg3d-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.cfg3d-collection-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fff;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: default;
+}
+
+.cfg3d-collection-card.model-card { cursor: pointer; }
+.cfg3d-collection-card.model-card:hover { border-color: #888; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); }
+.cfg3d-collection-card.model-card.active { border-color: #1a1a1a; border-width: 2px; padding: 13px; }
+.cfg3d-collection-card.highlight { border-color: #f5b89e; background: #fef5f0; }
+
+.cfg3d-collection-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  background-color: #f5f5f5;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.cfg3d-collection-card h4 {
+  font-size: 12px; font-weight: 600;
+  margin: 0 0 6px;
+  line-height: 1.3;
+  color: #1a1a1a;
+}
+
+.cfg3d-collection-price { font-size: 14px; font-weight: 700; }
+
+.cfg3d-collection-prices { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.cfg3d-collection-prices .now { font-size: 14px; font-weight: 700; }
+.cfg3d-collection-prices .was { font-size: 11px; color: #999; text-decoration: line-through; }
+.cfg3d-collection-prices .discount {
+  background: #ff9c8a; color: #fff;
+  font-size: 10px; font-weight: 700;
+  padding: 2px 5px; border-radius: 3px;
+}
+
+/* Адаптив */
+@media (max-width: 1100px) {
+  .cfg3d-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .cfg3d { margin: 16px 0; }
+  .cfg3d-section-title { font-size: 18px; }
+  .cfg3d-thumbs { grid-template-columns: repeat(5, 1fr); }
+  .cfg3d-thumb { height: 60px; }
+}

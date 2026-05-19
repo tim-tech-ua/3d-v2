@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+  <name>3D Configurator</name>
+  <code>configurator3d</code>
+  <version>1.0.0</version>
+  <author>Bjorn</author>
+  <link>https://test.macsstore.com.ua/</link>
+
+  <!-- ================================================================= -->
+  <!-- 1. Admin product form: add the "Enable 3D Configurator" checkbox  -->
+  <!-- ================================================================= -->
+  <file path="admin/view/template/catalog/product_form.twig">
+    <operation>
+      <search><![CDATA[<select name="status" id="input-status" class="form-control">]]></search>
+      <add position="before"><![CDATA[
+              <div class="form-group">
+                <label class="col-sm-2 control-label" for="input-cfg3d-enabled">3D Конфігуратор</label>
+                <div class="col-sm-10">
+                  <select name="cfg3d_enabled" id="input-cfg3d-enabled" class="form-control">
+                    <option value="1" {% if cfg3d_enabled is defined and cfg3d_enabled %}selected="selected"{% endif %}>Увімкнено</option>
+                    <option value="0" {% if cfg3d_enabled is not defined or not cfg3d_enabled %}selected="selected"{% endif %}>Вимкнено</option>
+                  </select>
+                </div>
+              </div>
+              ]]></add>
+    </operation>
+  </file>
+
+  <!-- ================================================================= -->
+  <!-- 2. Admin product controller: read flag in getForm()               -->
+  <!-- ================================================================= -->
+  <file path="admin/controller/catalog/product.php">
+    <operation>
+      <search><![CDATA[if (isset($this->request->post['status'])) {
+			$data['status'] = $this->request->post['status'];]]></search>
+      <add position="before"><![CDATA[
+		if (isset($this->request->post['cfg3d_enabled'])) {
+			$data['cfg3d_enabled'] = $this->request->post['cfg3d_enabled'];
+		} elseif (!empty($product_info)) {
+			$data['cfg3d_enabled'] = isset($product_info['cfg3d_enabled']) ? $product_info['cfg3d_enabled'] : 0;
+		} else {
+			$data['cfg3d_enabled'] = 0;
+		}
+
+		]]></add>
+    </operation>
+  </file>
+
+  <!-- ================================================================= -->
+  <!-- 3. Admin product model: save the flag in addProduct/editProduct   -->
+  <!-- ================================================================= -->
+  <file path="admin/model/catalog/product.php">
+    <operation>
+      <search index="0"><![CDATA[status = '" . (int)$data['status'] . "']]></search>
+      <add position="replace"><![CDATA[status = '" . (int)$data['status'] . "', cfg3d_enabled = '" . (isset($data['cfg3d_enabled']) ? (int)$data['cfg3d_enabled'] : 0) . "']]></add>
+    </operation>
+    <operation>
+      <search index="1"><![CDATA[status = '" . (int)$data['status'] . "']]></search>
+      <add position="replace"><![CDATA[status = '" . (int)$data['status'] . "', cfg3d_enabled = '" . (isset($data['cfg3d_enabled']) ? (int)$data['cfg3d_enabled'] : 0) . "']]></add>
+    </operation>
+  </file>
+
+  <!-- ================================================================= -->
+  <!-- 4. Catalog product controller: pass cfg3d_enabled to the template -->
+  <!-- ================================================================= -->
+  <file path="catalog/controller/product/product.php">
+    <operation>
+      <search><![CDATA[$this->response->setOutput($this->load->view('product/product', $data));]]></search>
+      <add position="before"><![CDATA[
+			$data['cfg3d_enabled'] = !empty($product_info['cfg3d_enabled']) ? (int)$product_info['cfg3d_enabled'] : 0;
+			$data['cfg3d_product_id'] = (int)$this->request->get['product_id'];
+
+			]]></add>
+    </operation>
+  </file>
+
+  <!-- ================================================================= -->
+  <!-- 5. Catalog product template: include the configurator block       -->
+  <!-- ================================================================= -->
+  <file path="catalog/view/theme/*/template/product/product.twig">
+    <operation>
+      <search><![CDATA[{{ footer }}]]></search>
+      <add position="before"><![CDATA[
+{% if cfg3d_enabled %}
+  {% include 'extension/module/configurator3d.twig' %}
+{% endif %}
+]]></add>
+    </operation>
+  </file>
+
+</modification>

@@ -1,0 +1,44 @@
+{{ header }}{{ column_left }}
+<div id="content">
+  <div class="page-header">
+    <div class="container-fluid">
+      <h1>{{ heading_title }}</h1>
+      <ul class="breadcrumb">
+        {% for breadcrumb in breadcrumbs %}
+          <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container-fluid">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-cube"></i> {{ heading_title }}</h3>
+      </div>
+      <div class="panel-body">
+        <p>{{ text_intro }}</p>
+
+        {% if installed %}
+          <div class="alert alert-success">
+            <i class="fa fa-check-circle"></i> Колонку <code>cfg3d_enabled</code> в таблиці <code>oc_product</code> створено.
+            Перемикач <strong>«3D Конфігуратор»</strong> доступний у формі редагування товару.
+          </div>
+          <a href="{{ uninstall_url }}" class="btn btn-warning" onclick="return confirm('Колонку буде видалено разом з усіма налаштуваннями. Продовжити?')">
+            <i class="fa fa-trash"></i> {{ button_uninstall }}
+          </a>
+        {% else %}
+          <div class="alert alert-info">
+            <i class="fa fa-info-circle"></i> Колонку ще не створено. Натисніть кнопку нижче, щоб додати <code>cfg3d_enabled</code> у таблицю товарів.
+          </div>
+          <a href="{{ install_url }}" class="btn btn-primary">
+            <i class="fa fa-plus"></i> {{ button_install }}
+          </a>
+        {% endif %}
+
+        <a href="{{ back_url }}" class="btn btn-default">Назад</a>
+      </div>
+    </div>
+  </div>
+</div>
+{{ footer }}
