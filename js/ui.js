@@ -175,7 +175,7 @@ export function initUI(defaultModelPath) {
   // ---- Колор-пикер для базы
   $('#baseColorPicker').addEventListener('input', (e) => {
     ensure360();
-    applyColorToSource(null, e.target.value);
+    applyColorToBody(e.target.value);
   });
 
   // ---- Ножки
