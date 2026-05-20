@@ -19,6 +19,7 @@ const STATE = {
   fabricUrl: null,
   fabricPrice: 0,
   fabricName: '',
+  fabricType: 'standard',
   legsSrc: null,
   legsPrice: 0,
   legsName: '',
@@ -164,7 +165,8 @@ export function initUI(defaultModelPath) {
       STATE.fabricUrl   = btn.dataset.texture;
       STATE.fabricPrice = parseInt(btn.dataset.price, 10) || 0;
       STATE.fabricName  = btn.dataset.name || '';
-      applyFabricToSource(null, STATE.fabricUrl);
+      STATE.fabricType  = btn.dataset.type || 'standard';
+      applyFabricToSource(null, STATE.fabricUrl, STATE.fabricType);
       recalculatePrice();
       updateSummary();
     });

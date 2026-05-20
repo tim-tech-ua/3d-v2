@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { setMaxAnisotropy } from './materials.js';
 
 // ===== Пресеты быстрых сцен =====
 const SCENES = {
@@ -32,6 +33,9 @@ export function initScene(canvas, viewerWrap) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
+
+  // Realism: пробросить реальный максимум GPU в materials.js
+  setMaxAnisotropy(renderer.capabilities.getMaxAnisotropy());
 
   // Scene и стандартное окружение (RoomEnvironment) для базовых отражений
   scene = new THREE.Scene();
