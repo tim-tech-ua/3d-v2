@@ -1,8 +1,8 @@
 // js/materials.js
-// Применение тканей и цветов к частям модели — по источнику (база / слот).
-// Загруженные текстуры проходят «realism pass»: анизотропная фильтрация,
-// мипмапы, корректный colorSpace. Для тканей-вельветов — отдельный пресет
-// материала (более низкий roughness, лёгкая ширь от env-map).
+// Применение тканей и цветов к частям модели. Категоризация по имени материала:
+// material name содержит legs/frame/metal/support → категория "legs", иначе "body".
+// Это работает и когда ножки приходят отдельным компонентом (source='legs'),
+// и когда они «вшиты» в базовый GLB как отдельный материал.
 
 import * as THREE from 'three';
 import { getParts, getOriginalMaterials } from './model.js';
@@ -10,37 +10,36 @@ import { getParts, getOriginalMaterials } from './model.js';
 const textureLoader = new THREE.TextureLoader();
 
 let textureRepeat = 2.0;
-let maxAnisotropy = 16; // обновляется из scene.js при первой загрузке
+let maxAnisotropy = 16;
 
-// ===== Realism: настройки материалов по типу ткани =====
 const FABRIC_PRESETS = {
-  // Обычная плотная ткань (большинство)
-  standard: { roughness: 0.85, metalness: 0.0, envMapIntensity: 1.0 },
-  // Велюр / вельвет — лёгкая шёлковистость и пониженный roughness
+  standard: { roughness: 0.85, metalness: 0.0,  envMapIntensity: 1.0 },
   velvet:   { roughness: 0.55, metalness: 0.05, envMapIntensity: 1.4 },
-  // Гладкие фабрики (микрофибра, шёлк-подобные)
   smooth:   { roughness: 0.65, metalness: 0.02, envMapIntensity: 1.2 }
 };
 
-// ===== Realism: применить к свежезагруженной текстуре =====
+const LEGS_NAME_RE = /legs?|frame|metal|support|опор|ножк/i;
+
+function isLegsPart(part) {
+  if (part.source === 'legs') return true;            // отдельный компонент
+  if (LEGS_NAME_RE.test(part.name || '')) return true; // материал назван legs/frame и т.п.
+  return false;
+}
+
 function tuneTextureForRealism(tex) {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = maxAnisotropy;            // острые края на углах
+  tex.anisotropy = maxAnisotropy;
   tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
   tex.repeat.set(textureRepeat, textureRepeat);
 }
 
-// ===== Максимальная анизотропия = capabilities.getMaxAnisotropy() =====
-// Вызывается из scene.js после инициализации рендерера, чтобы текстуры
-// получили реально доступный максимум GPU (обычно 16, на слабых картах меньше).
 export function setMaxAnisotropy(value) {
   maxAnisotropy = value || 16;
 }
 
-// ===== Применить материал к mesh-ам part =====
 function applyPartMaterial(part) {
   const preset = FABRIC_PRESETS[part.type || 'standard'] || FABRIC_PRESETS.standard;
   part.meshes.forEach((mesh) => {
@@ -56,13 +55,12 @@ function applyPartMaterial(part) {
   });
 }
 
-// ===== Применить ткань ко всем частям источника =====
-// type: 'standard' | 'velvet' | 'smooth' — определяет пресет материала
-export function applyFabricToSource(source, url, type, callback) {
+// ===== Ткань — только обивка (body) =====
+export function applyFabricToBody(url, type, callback) {
   textureLoader.load(url, (tex) => {
     tuneTextureForRealism(tex);
     for (const part of getParts().values()) {
-      if (part.source !== source) continue;
+      if (isLegsPart(part)) continue;
       part.texture = tex;
       part.textureUrl = url;
       part.type = type || 'standard';
@@ -72,17 +70,26 @@ export function applyFabricToSource(source, url, type, callback) {
   });
 }
 
-// ===== Применить цвет ко всем частям источника =====
-export function applyColorToSource(source, hexString) {
-  const baseColor = new THREE.Color(hexString);
+// ===== Цвет — только обивка =====
+export function applyColorToBody(hexString) {
+  const c = new THREE.Color(hexString);
   for (const part of getParts().values()) {
-    if (part.source !== source) continue;
-    part.color = baseColor.clone();
+    if (isLegsPart(part)) continue;
+    part.color = c.clone();
     applyPartMaterial(part);
   }
 }
 
-// ===== Масштаб повторения текстуры =====
+// ===== Цвет — только ножки =====
+export function applyColorToLegs(hexString) {
+  const c = new THREE.Color(hexString);
+  for (const part of getParts().values()) {
+    if (!isLegsPart(part)) continue;
+    part.color = c.clone();
+    applyPartMaterial(part);
+  }
+}
+
 export function setTextureRepeat(value) {
   textureRepeat = value;
   for (const part of getParts().values()) {
@@ -93,7 +100,6 @@ export function setTextureRepeat(value) {
   }
 }
 
-// ===== Сброс всех частей к оригинальным материалам =====
 export function resetAllMaterials() {
   const originals = getOriginalMaterials();
   for (const part of getParts().values()) {

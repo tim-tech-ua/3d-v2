@@ -3,7 +3,7 @@
 
 import { sceneApi } from './scene.js';
 import { loadModel, loadComponent, removeComponent } from './model.js';
-import { applyFabricToSource, applyColorToSource } from './materials.js';
+import { applyFabricToBody, applyColorToBody, applyColorToLegs } from './materials.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -95,7 +95,7 @@ function loadModelWithUI(path) {
       loadingEl.style.display = 'none';
       // Восстановить состояние конфигуратора на новой модели
       if (STATE.legsSrc)   loadComponentWithUI(STATE.legsSrc, 'legs', /*silent*/ true);
-      if (STATE.fabricUrl) applyFabricToSource(null, STATE.fabricUrl, STATE.fabricType);
+      if (STATE.fabricUrl) applyFabricToBody(STATE.fabricUrl, STATE.fabricType);
     },
     onProgress: (percent) => {
       loadingEl.textContent = 'Завантаження: ' + percent.toFixed(0) + '%';
@@ -166,7 +166,7 @@ export function initUI(defaultModelPath) {
       STATE.fabricPrice = parseInt(btn.dataset.price, 10) || 0;
       STATE.fabricName  = btn.dataset.name || '';
       STATE.fabricType  = btn.dataset.type || 'standard';
-      applyFabricToSource(null, STATE.fabricUrl, STATE.fabricType);
+      applyFabricToBody(STATE.fabricUrl, STATE.fabricType);
       recalculatePrice();
       updateSummary();
     });
@@ -206,7 +206,7 @@ export function initUI(defaultModelPath) {
       btn.classList.add('active');
       const color = btn.dataset.color;
       $('#legsColorPicker').value = color;
-      applyColorToSource('legs', color);
+      applyColorToLegs(color);
     });
   });
 
@@ -214,7 +214,7 @@ export function initUI(defaultModelPath) {
   $('#legsColorPicker').addEventListener('input', (e) => {
     ensure360();
     $$('#legsColorSwatches .swatch').forEach((b) => b.classList.remove('active'));
-    applyColorToSource('legs', e.target.value);
+    applyColorToLegs(e.target.value);
   });
 
   // ---- «До кошика»
