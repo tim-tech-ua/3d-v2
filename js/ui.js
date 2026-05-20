@@ -95,7 +95,7 @@ function loadModelWithUI(path) {
       loadingEl.style.display = 'none';
       // Восстановить состояние конфигуратора на новой модели
       if (STATE.legsSrc)   loadComponentWithUI(STATE.legsSrc, 'legs', /*silent*/ true);
-      if (STATE.fabricUrl) applyFabricToSource(null, STATE.fabricUrl);
+      if (STATE.fabricUrl) applyFabricToSource(null, STATE.fabricUrl, STATE.fabricType);
     },
     onProgress: (percent) => {
       loadingEl.textContent = 'Завантаження: ' + percent.toFixed(0) + '%';
